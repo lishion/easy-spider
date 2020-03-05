@@ -3,7 +3,7 @@ from spider.resource import Resource
 from spider.response import (Response, TextResponse, HTMLResponse)
 from requests import Session
 import requests
-
+from aiohttp import ClientSession
 
 class Request(ABC):
 
@@ -33,3 +33,25 @@ class SimpleRequest(Request):
 
     def __del__(self):
         self._session.close()
+
+
+class AsyncRequest(SimpleRequest):
+
+    def __init__(self, session):
+        super().__init__()
+        self._session: ClientSession = session
+
+    async def do_request(self, resource: Resource) -> Response:
+        response = await self._session.get(resource.uri)
+        content = await response.content.read()
+        content_type = response.headers.get("Content-Type")
+        args = (content, resource.uri, response.headers)
+        if content_type:
+            if "text/plain" in content_type:
+                return TextResponse(*args)
+            elif "text/html" in content_type:
+                return HTMLResponse(*args)
+        else:
+            return Response(*args)
+
+    def __del__(self): pass

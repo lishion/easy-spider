@@ -1,9 +1,9 @@
 import unittest
-from spider import SpiderTask
+from spider import SpiderTask, AsyncSpiderTask
 from spider.filter import html_filter
 from spider.response import HTMLResponse
 
-spider_task = SpiderTask(
+spider_task = AsyncSpiderTask(
     start_urls=["http://localhost:5000/test_extract"],
     extractor_filter=html_filter
 )

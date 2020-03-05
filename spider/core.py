@@ -5,6 +5,7 @@ from multiprocessing import Value
 from time import sleep
 from .log import logger
 from .resource import Resource
+import asyncio
 
 
 class Job:
@@ -44,3 +45,41 @@ class Job:
                 logger.warning(f"{task}处理失败: {e}", exc_info=True)
             finally:
                 self._num_running_task.value -= 1
+
+
+class AsyncJob:
+    def __init__(self, start_urls, spider: Spider, task_queue, num_threads: int = 3):
+        self._start_urls = start_urls
+        self._spider: Spider = spider
+        self._task_queue = task_queue
+        self._num_threads = num_threads
+        self._num_running_task = 0
+        self._thread_pool = ThreadPoolExecutor(max_workers=num_threads)
+        self._init_queue(start_urls)
+        self._loop = asyncio.get_event_loop()
+
+    def _init_queue(self, urls):
+        for url in urls:
+            self._task_queue.push(Resource(url, url, tag="any"))
+
+    async def start(self):
+        await asyncio.gather(*[self._run() for i in range(self._num_threads)])
+
+    async def _run(self):
+        while True:
+            task = self._task_queue.pop()
+            if not task:
+                if self._num_running_task == 0:  # 如果 task_queue 为空, 且同时正在进行的任务为0则退出
+                    break
+                else:
+                    await asyncio.sleep(0)
+                    continue
+            try:
+                self._num_running_task += 1
+                tasks = await self._spider.crawl(task)
+                for task in tasks:
+                    self._task_queue.push(task)
+            except Exception as e:
+                logger.warning(f"{task}处理失败: {e}", exc_info=True)
+            finally:
+                self._num_running_task -= 1
