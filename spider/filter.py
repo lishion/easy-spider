@@ -3,6 +3,7 @@ from spider.resource import Resource
 import re
 from typing import List, Tuple
 from .tool import get_extension
+from bloom_filter import BloomFilter
 
 
 class Filter(ABC):
@@ -114,3 +115,19 @@ IGNORED_EXTENSIONS = {
 static_filter = CustomFilter(lambda resource: get_extension(resource.uri) in IGNORED_EXTENSIONS)
 url_filter = RegexFilter(r"^https?:\/{2}[^\s]*?(\?.*)?$")
 html_filter = url_filter - static_filter
+
+
+class BloomFilterWrapper(Filter):
+    """
+    布隆过滤器， 可以依赖于其他过滤器的结果
+    """
+    def __init__(self, max_elements, error_rate, pre_filter: Filter = None):
+        self._history_filter = BloomFilter(max_elements, error_rate)
+        self._pre_filter = pre_filter
+
+    def accept(self, resource: Resource) -> bool:
+        this_filter_accept = resource.uri not in self._history_filter
+        pre_filter_accept = self._pre_filter.accept(resource) if self._pre_filter else True
+        accept = this_filter_accept and pre_filter_accept
+        accept and self._history_filter.add(resource.uri)  # 如果最终的结果为 True， 则添加到 history_filter 中
+        return accept
