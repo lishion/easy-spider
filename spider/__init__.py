@@ -3,10 +3,11 @@ from .extractor import SimpleBSExtractor
 from .core import Job, AsyncJob
 from .spider import Spider, AsyncSpider
 from .request import SimpleRequest, AsyncRequest
-from .resource import SimpleResourceQueue
+from .resource import SyncResourceQueue, SimpleResourceQueue
 from .handler import CustomHandler
 from aiohttp import ClientSession
 import asyncio
+
 
 class SpiderTask:
     def __init__(self, start_urls, extractor_filter):
@@ -16,9 +17,7 @@ class SpiderTask:
 
     def handler(self, filter=None, name="default"):
         def wrapper(func):
-            self._handlers.append(
-                CustomHandler(func, filter, name)
-            )
+            self._handlers.append(CustomHandler(func, filter, name))
         return wrapper
 
     def run(self, num_threads=3):
@@ -27,7 +26,7 @@ class SpiderTask:
             SimpleBSExtractor(self._extractor_filter),
             SimpleRequest()
         )
-        Job(self._start_urls, Spider(context), SimpleResourceQueue(), num_threads).start()
+        Job(self._start_urls, Spider(context), SyncResourceQueue(), num_threads).start()
 
 
 class AsyncSpiderTask(SpiderTask):

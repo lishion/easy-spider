@@ -1,6 +1,6 @@
 import unittest
 from spider import *
-from spider.resource import SimpleResourceQueue, Resource
+from spider.resource import SyncResourceQueue, Resource
 from spider.response import HTMLResponse
 from spider.extractor import SimpleBSExtractor
 from spider.request import SimpleRequest, AsyncRequest

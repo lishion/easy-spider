@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from queue import Queue, Empty
+from collections import deque
 
 
 class Resource(ABC):
@@ -19,25 +20,25 @@ class Resource(ABC):
 class ResourceQueue(ABC):
 
     @abstractmethod
-    def push(self, resource: Resource) -> None: pass
+    def put(self, resource: Resource) -> None: pass
 
     @abstractmethod
-    def pop(self) -> Resource: pass
+    def get(self) -> Resource: pass
 
     @abstractmethod
     def empty(self) -> bool: pass
 
 
-class SimpleResourceQueue(ResourceQueue):
+class SyncResourceQueue(ResourceQueue):
 
     def __init__(self):
         super().__init__()
         self._queue = Queue()
 
-    def push(self,  resource: Resource) -> None:
+    def put(self, resource: Resource) -> None:
         self._queue.put(resource)
 
-    def pop(self):
+    def get(self):
         try:
             return self._queue.get_nowait()
         except Empty:
@@ -45,3 +46,27 @@ class SimpleResourceQueue(ResourceQueue):
 
     def empty(self) -> bool:
         return self._queue.empty()
+
+    def __len__(self):
+        return self._queue.qsize()
+
+
+class SimpleResourceQueue(ResourceQueue):
+
+    def __init__(self):
+        self._queue = deque()
+
+    def put(self, resource: Resource) -> None:
+        self._queue.append(resource)
+
+    def get(self) -> Resource:
+        try:
+            return self._queue.pop()
+        except IndexError:
+            return None
+
+    def empty(self) -> bool:
+        return len(self) == 0
+
+    def __len__(self):
+        return len(self._queue)
