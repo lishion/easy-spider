@@ -109,7 +109,7 @@ IGNORED_EXTENSIONS = {
     'odp',
 
     # other
-    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk'
+    'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'js'
 }
 
 static_filter = CustomFilter(lambda resource: get_extension(resource.uri) in IGNORED_EXTENSIONS)
