@@ -3,7 +3,7 @@ from spider import SpiderTask, AsyncSpiderTask
 from spider.filter import html_filter
 from spider.response import HTMLResponse
 
-spider_task = AsyncSpiderTask(
+spider_task = SpiderTask(
     start_urls=["http://localhost:5000/test_extract"],
     extractor_filter=html_filter
 )

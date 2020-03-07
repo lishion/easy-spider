@@ -44,6 +44,6 @@ class AsyncRequest(SimpleRequest):
     async def do_request(self, resource: Resource):
         raw_response = await self._session.get(resource.uri)
         content = await raw_response.content.read()
-        return self.to_response(content, raw_response.url, raw_response.headers)
+        return self.to_response(content, str(raw_response.url), raw_response.headers)
 
     def __del__(self): pass

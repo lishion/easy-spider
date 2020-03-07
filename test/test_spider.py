@@ -45,6 +45,14 @@ class TestSpider(unittest.TestCase):
         loop = get_event_loop()
         loop.run_until_complete(self.async_spider())
 
+    def test_simple_spider(self):
+        r = Resource("http://localhost:5000/test_extract", "http://localhost:5000/test_extract")
+        context = Context(
+            [handle, handle2],
+            SimpleBSExtractor(html_filter),
+            SimpleRequest()
+        )
+        Spider(context).crawl(r)
 
 if __name__ == '__main__':
     unittest.main()
