@@ -4,7 +4,7 @@ from spider.resource import Resource, ResourceQueue
 from spider.request import Request
 from typing import List
 from spider.log import logger
-from .request import AsyncRequest
+
 
 class Context:
     def __init__(self,
@@ -24,8 +24,7 @@ class Spider:
     def handle_and_extract(self, resource, response):
         for handler in self._context.handlers:  # 寻找可以处理该资源的 handler
             # 未设置 filter 表示接收所有类型的 response
-            can_handle = (handler.filter is None) \
-                         or (handler.filter and handler.filter.accept(resource))
+            can_handle = (handler.filter is None) or handler.filter.accept(resource)
             if can_handle:
                 handler.handle(response)
                 logger.info(f"{resource}处理完成, handler={handler.name}")
