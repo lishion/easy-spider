@@ -22,10 +22,10 @@ class AbstractJob(Job, ABC):
         self._spider = spider
         self._resource_queue = resource_queue
         self._num_threads = num_threads
-        self._init_queue()
+        self._init_resource_queue()
 
-    def _init_queue(self):
-        [self._resource_queue.put(resource) for resource in self._start_resources]
+    def _init_resource_queue(self):
+        self._resource_queue.put_many(self._start_resources)
 
 
 class MultiThreadJob(AbstractJob):
@@ -52,8 +52,8 @@ class MultiThreadJob(AbstractJob):
                 else:
                     self._num_running_task.value += 1
             try:
-                for resource in self._spider.crawl(resource):
-                    self._resource_queue.put(resource)
+                new_resources = self._spider.crawl(resource)
+                self._resource_queue.put_many(new_resources)
             except Exception as e:
                 logger.warning(f"{resource}处理失败: {e}", exc_info=True)
             finally:
@@ -81,9 +81,8 @@ class AsyncJob(AbstractJob):
             else:
                 self._num_running_task += 1
             try:
-                tasks = await self._spider.crawl(resource)
-                for resource in tasks:
-                    self._resource_queue.put(resource)
+                new_resources = await self._spider.crawl(resource)
+                self._resource_queue.put_many(new_resources)
             except Exception as e:
                 logger.warning(f"{resource}处理失败: {e}", exc_info=True)
             finally:

@@ -44,6 +44,10 @@ class ResourceQueue(ABC):
     @abstractmethod
     def put(self, resource: Resource) -> None: pass
 
+    def put_many(self, resources):
+        for resource in resources:
+            self.put(resource)
+
     @abstractmethod
     def get(self) -> Resource: pass
 
