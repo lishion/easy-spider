@@ -2,9 +2,11 @@ import unittest
 from spider import SpiderTask, AsyncSpiderTask
 from spider.filter import html_filter
 from spider.response import HTMLResponse
+from spider.resource import Resource
+
 
 spider_task = AsyncSpiderTask(
-    start_urls=["http://localhost:5000/test_extract"],
+    start_resources=Resource.of("http://localhost:5000/test_extract"),
     extractor_filter=html_filter
 )
 

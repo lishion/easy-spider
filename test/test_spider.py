@@ -32,7 +32,7 @@ class TestSpider(unittest.TestCase):
     #     job.start()
 
     async def async_spider(self):
-        r = Resource("http://localhost:5000/test_extract", "http://localhost:5000/test_extract")
+        r = Resource.get_from("http://localhost:5000/test_extract")
         async with ClientSession() as session:
             context = Context(
                 [handle, handle2],
@@ -46,13 +46,14 @@ class TestSpider(unittest.TestCase):
         loop.run_until_complete(self.async_spider())
 
     def test_simple_spider(self):
-        r = Resource("http://localhost:5000/test_extract", "http://localhost:5000/test_extract")
+        r = Resource.get_from("http://localhost:5000/test_extract")
         context = Context(
             [handle, handle2],
             SimpleBSExtractor(html_filter),
             SimpleRequest()
         )
         Spider(context).crawl(r)
+
 
 if __name__ == '__main__':
     unittest.main()

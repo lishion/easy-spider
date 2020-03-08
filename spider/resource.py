@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from queue import Queue, Empty
 from collections import deque
+from typing import List
 
 
 class Resource(ABC):
@@ -15,6 +16,27 @@ class Resource(ABC):
 
     def __str__(self):
         return self.__repr__()
+
+    @staticmethod
+    def get_from(*resource_args):
+        num_of_args = len(resource_args)
+        if num_of_args == 1:
+            url = resource_args[0]
+            return Resource(url, url)
+        elif 1 < num_of_args <= 4:
+            return Resource(*resource_args)
+        else:
+            raise ValueError("迭代器长度错误，应当[1, 4]，实际为 {}".format(num_of_args))
+
+    @staticmethod
+    def of(*resource_args_list) -> List:
+        res = []
+        for resource_args in resource_args_list:
+            if type(resource_args) == str:
+                res.append(Resource.get_from(resource_args))
+            else:
+                res.append(Resource.get_from(*resource_args))
+        return res
 
 
 class ResourceQueue(ABC):
