@@ -1,6 +1,6 @@
 from .spider import Context
 from .extractor import SimpleBSExtractor
-from .core import Job, AsyncJob
+from .job import Job, AsyncJob
 from .spider import Spider, AsyncSpider
 from .request import SimpleRequest, AsyncRequest
 from .resource import SyncResourceQueue, SimpleResourceQueue
