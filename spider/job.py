@@ -1,4 +1,4 @@
-from spider.spider import Spider
+from spider.spider import MultiThreadSpider
 from concurrent.futures import ThreadPoolExecutor, wait
 from threading import Lock
 from multiprocessing import Value
@@ -17,20 +17,15 @@ class Job(ABC):
 
 class AbstractJob(Job, ABC):
 
-    def __init__(self, start_resources, spider, resource_queue: ResourceQueue, num_threads=3):
-        self._start_resources = start_resources
+    def __init__(self, spider, resource_queue: ResourceQueue, num_threads=3):
         self._spider = spider
         self._resource_queue = resource_queue
         self._num_threads = num_threads
-        self._init_resource_queue()
-
-    def _init_resource_queue(self):
-        self._resource_queue.put_many(self._start_resources)
 
 
 class MultiThreadJob(AbstractJob):
-    def __init__(self, start_urls, spider: Spider, resource_queue, num_threads: int = 3):
-        super().__init__(start_urls, spider, resource_queue, num_threads)
+    def __init__(self, spider: MultiThreadSpider, resource_queue, num_threads: int = 3):
+        super().__init__(spider, resource_queue, num_threads)
         self._thread_pool = ThreadPoolExecutor(max_workers=num_threads)
         self._num_running_task = Value("i", 0)
         self._lock = Lock()
@@ -61,8 +56,8 @@ class MultiThreadJob(AbstractJob):
 
 
 class AsyncJob(AbstractJob):
-    def __init__(self, start_resources, spider: Spider, resource_queue, num_threads: int = 3):
-        super().__init__(start_resources, spider, resource_queue, num_threads)
+    def __init__(self, spider: MultiThreadSpider, resource_queue, num_threads: int = 3):
+        super().__init__(spider, resource_queue, num_threads)
         self._num_running_task = 0
         self._loop = asyncio.get_event_loop()
 
