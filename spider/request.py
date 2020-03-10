@@ -13,8 +13,8 @@ class Request(ABC):
 
 
 class SimpleRequest(Request):
-    def __init__(self, session=None):
-        self._session: Session = session or Session()
+    def __init__(self, session):
+        self._session: Session = session
 
     @staticmethod
     def to_response(content, url, headers):
@@ -31,19 +31,14 @@ class SimpleRequest(Request):
         raw_response = self._session.get(resource.uri)
         return self.to_response(raw_response.content, raw_response.url, raw_response.headers)
 
-    def __del__(self):
-        self._session.close()
-
 
 class AsyncRequest(SimpleRequest):
 
     def __init__(self, session):
-        super().__init__()
+        super().__init__(session)
         self._session: ClientSession = session
 
     async def do_request(self, resource: Resource):
         raw_response = await self._session.get(resource.uri)
         content = await raw_response.content.read()
         return self.to_response(content, str(raw_response.url), raw_response.headers)
-
-    def __del__(self): pass

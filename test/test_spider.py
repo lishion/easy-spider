@@ -4,7 +4,7 @@ from spider.resource import SyncResourceQueue, Resource
 from spider.response import HTMLResponse
 from spider.extractor import SimpleBSExtractor
 from spider.request import SimpleRequest, AsyncRequest
-from spider.spider import Spider, AsyncSpider
+from spider.spider import MultiThreadSpider, AsyncSpider
 from spider.filter import html_filter, RegexFilter
 from spider.wrapper import handler
 from asyncio import get_event_loop
@@ -52,7 +52,7 @@ class TestSpider(unittest.TestCase):
             SimpleBSExtractor(html_filter),
             SimpleRequest()
         )
-        Spider(context).crawl(r)
+        MultiThreadSpider(context).crawl(r)
 
 
 if __name__ == '__main__':

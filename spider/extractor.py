@@ -8,7 +8,14 @@ from .filter import Filter
 class Extractor(ABC):
 
     def __init__(self, filter: Filter):
-        self.filter = filter
+        self._filter = filter
+
+    @property
+    def filter(self): return self._filter
+
+    @filter.setter
+    def filter(self, filter):
+        self._filter = filter
 
     @abstractmethod
     def url_to_resource(self, url: str) -> Resource: pass
