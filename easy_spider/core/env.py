@@ -30,7 +30,8 @@ class AsyncSpiderEvn:
         self.loop.run_until_complete(self._run_spider(spider))
 
     def __del__(self):
-        self.loop.run_until_complete(self.session.close())
+        if hasattr(self, "session") and self.session:
+            self.loop.run_until_complete(self.session.close())
 
 
 async_env = AsyncSpiderEvn()
