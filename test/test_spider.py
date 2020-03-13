@@ -1,58 +1,36 @@
 import unittest
-from spider import *
-from spider.resource import SyncResourceQueue, Resource
-from spider.response import HTMLResponse
-from spider.extractor import SimpleBSExtractor
-from spider.request import SimpleRequest, AsyncRequest
-from spider.spider import MultiThreadSpider, AsyncSpider
-from spider.filter import html_filter, RegexFilter
-from spider.wrapper import handler
-from asyncio import get_event_loop
+from easy_spider.core.spider import AsyncSpider
+from easy_spider.network.request import Request
 from aiohttp import ClientSession
-
-@handler(filter=-RegexFilter("^.*?/a.html$"), name="handler1")
-def handle(response: HTMLResponse):
-    print(response.bs.select("title"))
+from asyncio import get_event_loop
 
 
-@handler(filter=RegexFilter("^.*?/a.html$"), name="handler2")
-def handle2(response: HTMLResponse):
-    print("handler2" + str(response.bs.select("title")[0]))
+class MySpider(AsyncSpider):
+
+    def __init__(self):
+        super().__init__()
+        self.num_threads = 4
+
+    def handle(self, response):
+        print(response.bs.title)
+        yield from super().handle(response)
 
 
 class TestSpider(unittest.TestCase):
-    # def test_spider(self):
-    #     context = Context(
-    #         [handle, handle2],
-    #         SimpleBSExtractor(html_filter),
-    #         SimpleRequest()
-    #     )
-    #     spider = Spider(context)
-    #     job = Job(["http://localhost:5000/test_extract"], spider, SimpleResourceQueue())
-    #     job.start()
 
-    async def async_spider(self):
-        r = Resource.get_from("http://localhost:5000/test_extract")
+    @staticmethod
+    async def async_spider():
         async with ClientSession() as session:
-            context = Context(
-                [handle, handle2],
-                SimpleBSExtractor(html_filter),
-                AsyncRequest(session)
-            )
-            await AsyncSpider(context).crawl(r)
+            r = Request("http://localhost:5000/test_extract")
+            spider = MySpider()
+            spider.set_session(session)
+            requests = await spider.crawl(r)
+            for request in requests:
+                print(request)
 
     def test_async_spider(self):
         loop = get_event_loop()
         loop.run_until_complete(self.async_spider())
-
-    def test_simple_spider(self):
-        r = Resource.get_from("http://localhost:5000/test_extract")
-        context = Context(
-            [handle, handle2],
-            SimpleBSExtractor(html_filter),
-            SimpleRequest()
-        )
-        MultiThreadSpider(context).crawl(r)
 
 
 if __name__ == '__main__':

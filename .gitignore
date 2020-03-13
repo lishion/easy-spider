@@ -1,5 +1,5 @@
 .idea
 *.log
-*/__pycache__
-*/spider.log
+**/__pycache__
+**/*.log
 main.py

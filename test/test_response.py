@@ -1,6 +1,6 @@
 import unittest
 import requests
-from spider.response import HTMLResponse
+from network.response import HTMLResponse
 
 
 class TestResponse(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestResponse(unittest.TestCase):
         self.assertIn("世界", text_response.text)
 
     def test_cache(self):
-        html_response = self.get_text_response("http://localhost:5000/test_encoding?charset=utf-8", HTMLResponse)
+        html_response = self.get_text_response("http://localhost:5000/test_encoding?charset=utf-8")
         self.assertIs(html_response.bs, html_response.bs)
 
 

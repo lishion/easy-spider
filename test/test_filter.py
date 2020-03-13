@@ -1,20 +1,20 @@
-from spider.filter import *
-from spider.resource import Resource
+from easy_spider.filters.build_in import *
+from network.request import Request
 import unittest
 
 
 class TestFilter(unittest.TestCase):
 
     def test_reg_filter(self):
-        r = Resource("http://www.baidu.com", "http://www.baidu.com")
+        r = Request("http://www.baidu.com", "http://www.baidu.com")
         f = RegexFilter(r"http://")
         self.assertTrue(f.accept(r))
 
     def assert_true(self, r, url):
-        self.assertTrue(r.accept(Resource(url, url)))
+        self.assertTrue(r.accept(Request(url, url)))
 
     def assert_false(self, r, url):
-        self.assertFalse(r.accept(Resource(url, url)))
+        self.assertFalse(r.accept(Request(url, url)))
 
     def test_and_op(self):
         r = RegexFilter("") + RegexFilter("") + RegexFilter("")

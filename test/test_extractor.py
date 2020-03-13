@@ -1,7 +1,7 @@
-from spider.extractor import *
+from extractors.extractor import *
 import unittest
 import requests
-from spider.filter import *
+from filters.filter import *
 
 
 class Extractor(unittest.TestCase):
@@ -12,16 +12,19 @@ class Extractor(unittest.TestCase):
         text_response = HTMLResponse(r.content, r.url, r.headers)
         return text_response
 
-    def extract_urls(self, filters, url):
-        extractor = SimpleBSExtractor(filters)
-        tasks = extractor.extract(self.get_text_response(url))
-        return [t.resource.uri for t in tasks]
+    def extract_urls(self, url):
+        extractor = SimpleBSExtractor()
+        return list(extractor.extract(self.get_text_response(url)))
 
     def test_simple_extractor(self):
-        urls = self.extract_urls(html_filter, "http://localhost:5000/test_extract")
+        urls = self.extract_urls("http://localhost:5000/test_extract")
         self.assertIn("http://localhost:5000/a.html", urls)
         self.assertIn("http://localhost:5000/b/c/d", urls)
-        self.assertNotIn("javascript:func(1)", urls)
-        self.assertNotIn("/test.zip", urls)
-        self.assertNotIn("/test.Mp4", urls)
-        self.assertNotIn("/test.mP3", urls)
+        self.assertIn("javascript:func(1)", urls)
+        self.assertIn("http://localhost:5000/test.zip", urls)
+        self.assertIn("http://localhost:5000/test.Mp4", urls)
+        self.assertIn("http://localhost:5000/test.mP3", urls)
+
+
+if __name__ == "__main__":
+    unittest.main()
