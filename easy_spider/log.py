@@ -7,7 +7,7 @@ LOG_SETTING = {
     "version": 1,
     "formatters": {
         "default": {
-            "format": "%(asctime)s %(filename)s %(funcName)s %(lineno)d %(message)s",
+            "format": "%(asctime)s %(levelname)-8s %(filename)s %(funcName)s %(lineno)d %(message)s",
             "datefmt": '%Y-%m-%d %H:%M:%S'
         },
         "colored": {
