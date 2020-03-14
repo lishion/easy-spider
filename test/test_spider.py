@@ -1,8 +1,10 @@
 import unittest
+from test.net_mock import NetMockTestCase
 from easy_spider.core.spider import AsyncSpider
 from easy_spider.network.request import Request
 from aiohttp import ClientSession
 from asyncio import get_event_loop
+from test.tools import test_page
 
 
 class MySpider(AsyncSpider):
@@ -16,21 +18,28 @@ class MySpider(AsyncSpider):
         yield from super().handle(response)
 
 
-class TestSpider(unittest.TestCase):
+class TestSpider(NetMockTestCase):
 
-    @staticmethod
-    async def async_spider():
-        async with ClientSession() as session:
-            r = Request("http://localhost:5000/test_extract")
-            spider = MySpider()
-            spider.set_session(session)
-            requests = await spider.crawl(r)
-            for request in requests:
-                print(request)
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        cls.mocked.get('http://localhost:5000/test_extract',
+                        content_type="text/html",
+                        body=test_page)
+
+    async def async_spider(self):
+        self.prepare()
+        r = Request("http://localhost:5000/test_extract")
+        spider = MySpider()
+        spider.set_session(TestSpider.session)
+        requests = await spider.crawl(r)
+        for request in requests:
+            print(request)
 
     def test_async_spider(self):
-        loop = get_event_loop()
-        loop.run_until_complete(self.async_spider())
+        self.run_and_get_result(self.async_spider())
+
+
 
 
 if __name__ == '__main__':

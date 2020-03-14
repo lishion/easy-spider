@@ -1,7 +1,6 @@
-from extractors.extractor import *
+from easy_spider.extractors.extractor import *
 import unittest
 import requests
-from filters.filter import *
 
 
 class Extractor(unittest.TestCase):

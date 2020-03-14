@@ -1,5 +1,5 @@
 from easy_spider.filters.build_in import *
-from network.request import Request
+from easy_spider.network.request import Request
 import unittest
 
 
@@ -54,12 +54,6 @@ class TestFilter(unittest.TestCase):
         self.assert_false(html_filter, "http://www.baidu.com/a.zip")
         self.assert_false(html_filter, "http://www.baidu.com/b.Mp4")
         self.assert_false(html_filter, "http://www.baidu.com/b.mP3")
-
-    def test_bloom_filter(self):
-        bloom_filter = BloomFilterWrapper(10000, 0.001, pre_filter=html_filter)
-        self.assert_true(bloom_filter, "http://www.baidu")
-        self.assert_false(bloom_filter, "http://www.baidu")
-        self.assert_false(bloom_filter, "javascript")
 
 
 if __name__ == '__main__':
