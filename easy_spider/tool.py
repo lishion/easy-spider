@@ -1,6 +1,7 @@
 import posixpath
 from typing import Any
 from os import path
+import sys
 
 
 def get_extension(url):
@@ -22,3 +23,4 @@ def get_abs_path(file_path):
 
 
 ABS_PATH = get_abs_path(__file__)
+sys.path.append(path.join(ABS_PATH, ".."))

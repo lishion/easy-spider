@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from queue import Queue, Empty
 from collections import deque
-from typing import List
 
 
 class Request(ABC):

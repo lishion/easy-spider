@@ -1,8 +1,4 @@
-from easy_spider.core.spider import MultiThreadSpider, AsyncSpider
-from concurrent.futures import ThreadPoolExecutor, wait
-from threading import Lock
-from multiprocessing import Value
-from time import sleep
+from easy_spider.core.spider import AsyncSpider
 from easy_spider.log import logger
 from easy_spider.network.request import RequestQueue, SimpleRequestQueue
 import asyncio
