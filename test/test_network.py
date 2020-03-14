@@ -81,6 +81,12 @@ class TestResponse(NetMockTestCase):
         html_response = self.get_response("http://localhost:5000/test_encoding?charset=utf-8")
         self.assertIs(html_response.bs, html_response.bs)
 
+    def test_ensure_request_callable(self):
+        r = Request("test")
+        with self.assertRaises(TypeError):
+            r.handler = 1
+        r.handler = lambda x: x
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -9,7 +9,7 @@ class Request(ABC):
                  headers=None, cookies=None, timeout=None, params=None, data=None,
                  data_format='form', encoding='utf-8'):
         self.uri: str = uri
-        self.handler = handler
+        self._handler = handler
         self.priority: int = priority
         self.tag = tag
         self.method: str = method
@@ -20,6 +20,16 @@ class Request(ABC):
         self.params: dict = params or {}
         self.data: dict = data
         self.data_format: str = data_format
+
+    @property
+    def handler(self):
+        return self._handler
+
+    @handler.setter
+    def handler(self, callback):
+        if not callable(callback):
+            raise TypeError("handler must be a callable, but get type: `{}`".format(type(callback).__name__))
+        self._handler = callback
 
     def __repr__(self):
         return "[method={} uri={}]".format(self.method, self.uri)
