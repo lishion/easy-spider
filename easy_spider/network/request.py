@@ -36,6 +36,15 @@ class Request(ABC):
     def __str__(self):
         return self.__repr__()
 
+    @staticmethod
+    def of(instance):
+        if isinstance(instance, Request):
+            return instance
+        elif isinstance(instance, str):
+            return Request(instance)
+        else:
+            raise TypeError("can't build request from type `{}`".format(type(instance).__name__))
+
 
 class RequestQueue(ABC):
 

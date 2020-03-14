@@ -19,7 +19,7 @@ class Spider(ABC):
 
     @start_requests.setter
     def start_requests(self, requests):
-        self._start_requests = [self.set_default_request_param(request) for request in requests]
+        self._start_requests = [self.set_default_request_param(Request.of(request)) for request in requests]
 
     def set_default_request_param(self, request):
         """
@@ -30,7 +30,7 @@ class Spider(ABC):
         return request
 
     def follow_links(self, urls):
-        yield from (self.set_default_request_param(Request(url)) for url in urls)
+        yield from (self.set_default_request_param(Request.of(url)) for url in urls)
 
     @staticmethod
     def nothing():
@@ -67,9 +67,8 @@ class AsyncSpider(Spider, AsyncClient):
 
     async def crawl(self, request: Request):
         response = await self.do_request(request)
-        if not request.handler:
-            request.handler = self.handle
-        handle_res = request.handler(response)
-        if not handle_res:
+        request.handler = request.handler if request.handler else self.handle
+        new_requests = request.handler(response)
+        if not new_requests:
             return self.nothing()
-        return handle_res
+        return (Request.of(new_request) for new_request in new_requests)
