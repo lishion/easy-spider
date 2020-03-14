@@ -31,7 +31,12 @@ class AsyncSpiderEvn:
     def run(self, spider: AsyncSpider):
         self.loop.run_until_complete(self._run_spider(spider))
 
+    def clear(self):
+        self.__del__()
+
     def __del__(self):
+        if self.loop.is_closed():
+            return
         if hasattr(self, "session") and self.session:
             self.loop.run_until_complete(self.session.close())
 
