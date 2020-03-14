@@ -24,3 +24,5 @@ def get_abs_path(file_path):
 
 ABS_PATH = get_abs_path(__file__)
 sys.path.append(path.join(ABS_PATH, ".."))
+
+EXE_PATH = path.dirname(path.abspath(__name__))

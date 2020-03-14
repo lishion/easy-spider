@@ -1,5 +1,5 @@
 import logging.config
-from easy_spider.tool import ABS_PATH
+from easy_spider.tool import EXE_PATH
 from os import path
 
 
@@ -24,7 +24,7 @@ LOG_SETTING = {
         },
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": path.join(ABS_PATH, "easy_spider.log"),
+            "filename": path.join(EXE_PATH, "easy_spider.log"),
             "level": "WARNING",
             "formatter": "default",
             "maxBytes": 1024,
