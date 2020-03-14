@@ -1,10 +1,9 @@
 from easy_spider.core.spider import MultiThreadSpider, AsyncSpider
-from easy_spider.log import logger
 from concurrent.futures import ThreadPoolExecutor, wait
 from threading import Lock
 from multiprocessing import Value
 from time import sleep
-from log import logger
+from easy_spider.log import logger
 from easy_spider.network.request import RequestQueue, SimpleRequestQueue
 import asyncio
 from abc import ABC, abstractmethod
@@ -28,36 +27,36 @@ class AbstractTask(Task, ABC):
         self._request_queue.put_many(self._spider.start_requests)
 
 
-class MultiThreadJob(AbstractTask):
-    def __init__(self, spider: MultiThreadSpider, request_queue):
-        super().__init__(spider, request_queue)
-        self._thread_pool = ThreadPoolExecutor(max_workers=spider.start_requests)
-        self._num_running_task = Value("i", 0)
-        self._lock = Lock()
-
-    def run(self):
-        fs = [self._thread_pool.submit(self._run) for _ in range(self._spider.num_threads)]
-        wait(fs)
-
-    def _run(self):
-        while True:
-            with self._lock:
-                resource = self._request_queue.get()
-                if resource is None:
-                    if self._num_running_task.value == 0:  # 如果 task_queue 为空, 且同时正在进行的任务为0则退出
-                        break
-                    else:
-                        sleep(0)  # 否则 sleep 等待任务
-                        continue
-                else:
-                    self._num_running_task.value += 1
-            try:
-                new_resources = self._spider.crawl(resource)
-                self._request_queue.put_many(new_resources)
-            except Exception as e:
-                logger.warning(f"{resource}处理失败: {e}", exc_info=True)
-            finally:
-                self._num_running_task.value -= 1
+# class MultiThreadJob(AbstractTask):
+#     def __init__(self, spider: MultiThreadSpider, request_queue):
+#         super().__init__(spider, request_queue)
+#         self._thread_pool = ThreadPoolExecutor(max_workers=spider.start_requests)
+#         self._num_running_task = Value("i", 0)
+#         self._lock = Lock()
+#
+#     def run(self):
+#         fs = [self._thread_pool.submit(self._run) for _ in range(self._spider.num_threads)]
+#         wait(fs)
+#
+#     def _run(self):
+#         while True:
+#             with self._lock:
+#                 resource = self._request_queue.get()
+#                 if resource is None:
+#                     if self._num_running_task.value == 0:  # 如果 task_queue 为空, 且同时正在进行的任务为0则退出
+#                         break
+#                     else:
+#                         sleep(0)  # 否则 sleep 等待任务
+#                         continue
+#                 else:
+#                     self._num_running_task.value += 1
+#             try:
+#                 new_resources = self._spider.crawl(resource)
+#                 self._request_queue.put_many(new_resources)
+#             except Exception as e:
+#                 logger.warning(f"{resource}处理失败: {e}", exc_info=True)
+#             finally:
+#                 self._num_running_task.value -= 1
 
 
 class AsyncTask(AbstractTask):

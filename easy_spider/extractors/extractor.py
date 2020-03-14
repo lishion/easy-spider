@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from typing import Generator
-from network.response import HTMLResponse
+from easy_spider.network.response import HTMLResponse
 
 
 class Extractor(ABC):

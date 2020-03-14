@@ -36,15 +36,15 @@ class Spider(ABC):
     def crawl(self, request: Request): pass
 
 
-class MultiThreadSpider(Spider, SimpleClient):
-
-    def __init__(self, handlers):
-        super().__init__(handlers)
-        self.start_requests = []
-
-    def crawl(self, request: Request):
-        response = self.do_request(request)  # 发送请求
-        return request.handler(response)
+# class MultiThreadSpider(Spider, SimpleClient):
+#
+#     def __init__(self, handlers):
+#         super().__init__(handlers)
+#         self.start_requests = []
+#
+#     def crawl(self, request: Request):
+#         response = self.do_request(request)  # 发送请求
+#         return request.handler(response)
 
 
 class AsyncSpider(Spider, AsyncClient):

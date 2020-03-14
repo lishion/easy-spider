@@ -34,17 +34,17 @@ all_pass_filter = CustomFilter(lambda _: True)
 all_reject_filter = CustomFilter(lambda _: False)
 
 
-class BloomFilterWrapper(Filter):
-    """
-    布隆过滤器， 可以依赖于其他过滤器的结果
-    """
-    def __init__(self, max_elements, error_rate, pre_filter: Filter = None):
-        self._history_filter = BloomFilter(max_elements, error_rate)
-        self._pre_filter = pre_filter
-
-    def accept(self, request: Request) -> bool:
-        this_filter_accept = request.uri not in self._history_filter
-        pre_filter_accept = self._pre_filter.accept(request) if self._pre_filter else True
-        accept = this_filter_accept and pre_filter_accept
-        accept and self._history_filter.add(request.uri)  # 如果最终的结果为 True， 则添加到 history_filter 中
-        return accept
+# class BloomFilterWrapper(Filter):
+#     """
+#     布隆过滤器， 可以依赖于其他过滤器的结果
+#     """
+#     def __init__(self, max_elements, error_rate, pre_filter: Filter = None):
+#         self._history_filter = BloomFilter(max_elements, error_rate)
+#         self._pre_filter = pre_filter
+#
+#     def accept(self, request: Request) -> bool:
+#         this_filter_accept = request.uri not in self._history_filter
+#         pre_filter_accept = self._pre_filter.accept(request) if self._pre_filter else True
+#         accept = this_filter_accept and pre_filter_accept
+#         accept and self._history_filter.add(request.uri)  # 如果最终的结果为 True， 则添加到 history_filter 中
+#         return accept

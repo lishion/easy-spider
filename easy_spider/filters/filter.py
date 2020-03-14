@@ -1,9 +1,7 @@
 from abc import ABC
-from network.request import Request
+from easy_spider.network.request import Request
 import re
 from typing import List
-from tool import get_extension
-from bloom_filter import BloomFilter
 
 
 class Filter(ABC):

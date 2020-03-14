@@ -10,10 +10,12 @@ class AsyncSpiderEvn:
     def __init__(self, loop=None):
         self._client = None
         self._loop = loop
+        self._session = None
 
     def _prepare(self):
-        if self._client is None:
+        if self._session is None:
             self.session = ClientSession()
+        if self._client is None:
             self._client = AsyncClient()
 
     async def _run_spider(self, spider):

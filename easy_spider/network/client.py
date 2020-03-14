@@ -33,13 +33,14 @@ class SimpleClient(Client):
 
 class AsyncClient(Client):
 
-    def __init__(self):
-        self._session: ClientSession = None
+    def __init__(self, session=None):
+        self._session: ClientSession = session
 
     def set_session(self, session):
         self._session = session
 
     async def do_request(self, request: Request):
+        assert request
         common_params = dict(
             headers=request.headers,
             cookies=request.cookies,
@@ -52,7 +53,7 @@ class AsyncClient(Client):
         elif data_format == "json":
             common_params["json"] = request.data_format
         else:
-            raise ValueError("未知数据类型 {} ，仅支持 json 或 form]")
+            raise ValueError("未知数据类型 {} ，仅支持 json 或 form")
         raw_response = await self._session.request(request.method, request.uri, **common_params)
         content = await raw_response.content.read()
         return self.to_response(content, str(raw_response.url), raw_response.headers)

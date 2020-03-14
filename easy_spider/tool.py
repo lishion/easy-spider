@@ -17,4 +17,8 @@ def copy_attr(attr, _from, _to):
     setattr(_to, attr, getattr(_from, attr))
 
 
-ABS_PATH = path.dirname(path.abspath(__file__))
+def get_abs_path(file_path):
+    return path.dirname(path.abspath(file_path))
+
+
+ABS_PATH = get_abs_path(__file__)
