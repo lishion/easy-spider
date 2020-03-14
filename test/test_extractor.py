@@ -1,19 +1,14 @@
 from easy_spider.extractors.extractor import *
 import unittest
-import requests
+from test.mock_env import get
 
 
 class Extractor(unittest.TestCase):
 
     @staticmethod
-    def get_text_response(url):
-        r = requests.get(url)
-        text_response = HTMLResponse(r.content, r.url, r.headers)
-        return text_response
-
-    def extract_urls(self, url):
+    def extract_urls(url):
         extractor = SimpleBSExtractor()
-        return list(extractor.extract(self.get_text_response(url)))
+        return list(extractor.extract(get(url)))
 
     def test_simple_extractor(self):
         urls = self.extract_urls("http://localhost:5000/test_extract")

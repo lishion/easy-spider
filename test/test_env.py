@@ -2,6 +2,7 @@ import unittest
 from easy_spider.network.request import Request
 from easy_spider.core.env import async_env
 from easy_spider.core.spider import AsyncSpider
+from test import mock_env
 
 
 class MySpider(AsyncSpider):
