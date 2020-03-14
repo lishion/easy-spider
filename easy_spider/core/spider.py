@@ -11,7 +11,7 @@ class Spider(ABC):
 
     def __init__(self):
         self._start_requests = []
-        self.num_threads = 4
+        self.num_threads = 1
         self.extractor = SimpleBSExtractor()
 
     @property
@@ -31,6 +31,10 @@ class Spider(ABC):
 
     def follow_links(self, urls):
         yield from (self.set_default_request_param(Request(url)) for url in urls)
+
+    @staticmethod
+    def nothing():
+        return range(0)
 
     @abstractmethod
     def crawl(self, request: Request): pass
@@ -59,10 +63,13 @@ class AsyncSpider(Spider, AsyncClient):
             yield from filter(lambda request: self.filter.accept(request),
                               self.follow_links(self.extractor.extract(response)))
         else:
-            yield from range(0)
+            yield from self.nothing()
 
     async def crawl(self, request: Request):
         response = await self.do_request(request)
         if not request.handler:
             request.handler = self.handle
-        return request.handler(response)
+        handle_res = request.handler(response)
+        if not handle_res:
+            return self.nothing()
+        return handle_res
