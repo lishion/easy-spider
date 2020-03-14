@@ -12,7 +12,7 @@ LOG_SETTING = {
         },
         "colored": {
             '()': 'colorlog.ColoredFormatter',
-            'format': "%(log_color)s [%(asctime)s] %(levelname)-8s %(filename)s %(funcName)s(%(lineno)d) %(message)s",
+            'format': "%(log_color)s[%(asctime)s] %(levelname)-8s %(filename)s %(funcName)s(%(lineno)d) %(message)s",
             'datefmt': '%Y-%m-%d %H:%M:%S'
         }
     },
