@@ -27,7 +27,7 @@ IGNORED_EXTENSIONS = {
     'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'js'
 }
 
-static_filter = CustomFilter(lambda request: get_extension(request.uri) in IGNORED_EXTENSIONS)
+static_filter = CustomFilter(lambda url: get_extension(url) in IGNORED_EXTENSIONS)
 url_filter = RegexFilter(r"^https?:\/{2}[^\s]*?(\?.*)?$")
 html_filter = url_filter - static_filter
 all_pass_filter = CustomFilter(lambda _: True)
