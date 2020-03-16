@@ -2,5 +2,5 @@
 *.log
 **/__pycache__
 **/*.log
-main.py
+demo/quick_start.py
 .coverage
