@@ -18,9 +18,9 @@ class AbstractTask(Task, ABC):
         self._request_queue = request_queue
 
     def _init_queue(self):
-        if not self._spider.start_requests:
+        if not self._spider.start_targets:
             raise ValueError("初始请求不能为空")
-        self._request_queue.put_many(self._spider.start_requests)
+        self._request_queue.put_many(self._spider.start_targets)
 
 
 # class MultiThreadJob(AbstractTask):

@@ -5,35 +5,48 @@ from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider import tool
 from abc import ABC, abstractmethod
 from easy_spider.filters.build_in import html_filter
+from typing import Iterable
 
 
 class Spider(ABC):
 
     def __init__(self):
-        self._start_requests = []
+        self._start_targets = []
         self.num_threads = 1
+        self.filter = html_filter
         self.extractor = SimpleBSExtractor()
 
     @property
-    def start_requests(self): return self._start_requests
+    def start_targets(self): return self._start_targets
 
-    @start_requests.setter
-    def start_requests(self, requests):
-        self._start_requests = [self.set_default_request_param(Request.of(request)) for request in requests]
+    @start_targets.setter
+    def start_targets(self, targets):
+        self._start_targets = self.from_url_iter(targets, use_default_params=False)
 
     def set_default_request_param(self, request):
         """
-            若对象中存在与 request 相同名称的属性，则将其复制给 request
+            若 self 中存在与 request 相同名称的属性，则将其值复制给 request
         """
         for attr in tool.get_public_attr(request):
             hasattr(self, attr) and tool.copy_attr(attr, self, request)
         return request
 
-    def follow_links(self, urls):
-        yield from (self.set_default_request_param(Request.of(url)) for url in urls)
+    def from_url(self, url: str, use_default_params=True):
+        """
+            先根据 request_like 对象生成 request 对象，
+            若 use_default_params 为 True，则使用默认值覆盖 request 中的值，
+            否则直接方法 request 对象
+        """
+        request = Request.of(url)
+        if use_default_params:
+            request = self.set_default_request_param(request)
+        return request
+
+    def from_url_iter(self, urls: Iterable[str], use_default_params=True):
+        yield from (self.from_url(url, use_default_params) for url in urls)
 
     @staticmethod
-    def nothing():
+    def _nothing():
         return range(0)
 
     @abstractmethod
@@ -55,20 +68,19 @@ class AsyncSpider(Spider, AsyncClient):
 
     def __init__(self):
         super().__init__()
-        self.filter = html_filter
 
     @abstractmethod
     def handle(self, response: Response):
         if isinstance(response, HTMLResponse):
-            yield from filter(lambda request: self.filter.accept(request),
-                              self.follow_links(self.extractor.extract(response)))
+            requests = self.from_url_iter(self.extractor.extract(response))
+            yield from filter(lambda r: self.filter.accept(r.uri), requests)
         else:
-            yield from self.nothing()
+            yield from self._nothing()
 
     async def crawl(self, request: Request):
         response = await self.do_request(request)
         request.handler = request.handler if request.handler else self.handle
         new_requests = request.handler(response)
         if not new_requests:
-            return self.nothing()
+            return self._nothing()
         return (Request.of(new_request) for new_request in new_requests)

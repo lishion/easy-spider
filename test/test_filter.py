@@ -6,15 +6,14 @@ import unittest
 class TestFilter(unittest.TestCase):
 
     def test_reg_filter(self):
-        r = Request("http://www.baidu.com", "http://www.baidu.com")
         f = RegexFilter(r"http://")
-        self.assertTrue(f.accept(r))
+        self.assertTrue(f.accept("http://www.baidu.com"))
 
     def assert_true(self, r, url):
-        self.assertTrue(r.accept(Request(url, url)))
+        self.assertTrue(r.accept(url))
 
     def assert_false(self, r, url):
-        self.assertFalse(r.accept(Request(url, url)))
+        self.assertFalse(r.accept(url))
 
     def test_and_op(self):
         r = RegexFilter("") + RegexFilter("") + RegexFilter("")

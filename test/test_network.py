@@ -85,6 +85,14 @@ class TestNetWork(unittest.TestCase):
             r.handler = 1
         r.handler = lambda x: x
 
+    def test_build_request(self):
+        r = Request.of("http://test")
+        self.assertEqual(r.uri, "http://test")
+        r1 = Request.of(r)
+        self.assertIs(r1, r)
+        with self.assertRaises(TypeError):
+            Request.of(1)
+
 
 if __name__ == '__main__':
     unittest.main()

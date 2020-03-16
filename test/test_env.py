@@ -20,7 +20,7 @@ class TestCore(unittest.TestCase):
 
     def setUp(self) -> None:
         self.my_spider = MySpider()
-        self.my_spider.start_requests = [Request("http://localhost:5000/test_extract")]
+        self.my_spider.start_targets = ["http://localhost:5000/test_extract"]
 
     def test_set_default_method(self):
         r = Request("test")
