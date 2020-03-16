@@ -22,7 +22,7 @@ class TestNetWork(unittest.TestCase):
     @staticmethod
     def handler(url, **_):
         charset = url.query.get("charset", '')
-        content_type = f"text/html;charset={charset}"
+        content_type = "text/html;charset={}".format(charset)
         return CallbackResult(
             body=test_page,
             content_type=content_type,
