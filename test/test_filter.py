@@ -54,6 +54,12 @@ class TestFilter(unittest.TestCase):
         self.assert_false(html_filter, "http://www.baidu.com/b.Mp4")
         self.assert_false(html_filter, "http://www.baidu.com/b.mP3")
 
+    def test_bloom_filter(self):
+        history_filter = history_filter(html_filter, 1000, 0.001)
+        self.assertFalse(history_filter.accept("123231"))
+        self.assertTrue(history_filter.accept("http://123123"))
+        self.assertFalse(history_filter.accept("http://123123"))
+
 
 if __name__ == '__main__':
     unittest.main()

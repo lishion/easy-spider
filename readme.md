@@ -16,7 +16,7 @@ class MySpider(AsyncSpider):
 async_env.run(MySpider())
 ```
 
-本例子中爬取了 https://github.blog/ 。其中 `self.start_targets = ["https://github.blog/"]` 设置了初始需要爬取的目标。`handle(self, response: HTMLResponse)` 方法用于处理服务器返回的 `response`，并产生新的需要爬取得目标。因此 `handle` 方法返回值的类型必须为 `iterable`，或  `handle` 方法自身为一个生成器。在 `easy spider` 中，`AsyncSpider` 已经实现了一个从网页中抽取潜在爬取目标的 `handle` 方法，因此如果需要对 https://github.blog/ 上存在的 URL 进行进一步的爬取，可以:
+本例子中爬取了[github-blog](https://github.blog/) 。其中 `self.start_targets = ["https://github.blog/"]` 设置了初始需要爬取的目标。`handle(self, response: HTMLResponse)` 方法用于处理服务器返回的 `response`，并产生新的需要爬取得目标。因此 `handle` 方法返回值的类型必须为 `iterable`，或  `handle` 方法自身为一个生成器。在 `easy spider` 中，`AsyncSpider` 已经实现了一个从网页中抽取潜在爬取目标的 `handle` 方法，因此如果需要对[github-blog](https://github.blog/)上存在的 URL 进行进一步的爬取，可以:
 
 ``` python
 def handle(self, response: HTMLResponse):
@@ -128,5 +128,20 @@ class MySpider(AsyncSpider):
 
 async_env.run(MySpider())
 ```
+
+### URL去重
+
+在 `easy spider` 中可以使用 `history_filter` 进行去重，设置:
+
+`self.filter = history_filter(html_filter, 10000, 0.001)`
+
+`history_filter` 必须依赖于其他 `filter`。`history_filter` 将其他 `filter` 接受的 URL 放入历史中，若下次再出现则拒绝该URL。`history_filter` 有三个参数:
+
+* pre_filter:  history_filter 所依赖的过滤器
+* max_elements
+* error_rate
+
+ `history_filter ` 采用布隆过滤器实现去重，其中 `max_elements` 以及 `error_rate` 是与布隆过滤器相关的参数，其具体意义请参照[python-bloom-filter](https://github.com/hiway/python-bloom-filter)。
+
 
 
