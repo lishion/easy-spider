@@ -4,7 +4,7 @@ from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider import tool
 from abc import ABC, abstractmethod
-from easy_spider.filters.build_in import html_filter
+from easy_spider.filters.build_in import html_filter, all_pass_filter
 from typing import Iterable
 
 
@@ -13,17 +13,25 @@ class Spider(ABC):
     def __init__(self):
         self._start_targets = []
         self.num_threads = 1
-        self.filter = html_filter
+        self._filter = html_filter
         self.extractor = SimpleBSExtractor()
 
     @property
-    def start_targets(self): return self._start_targets
+    def start_targets(self):
+        return self._start_targets
 
     @start_targets.setter
     def start_targets(self, targets):
         self._start_targets = self.from_url_iter(targets, use_default_params=False)
 
-    def set_default_request_param(self, request):
+    @property
+    def filter(self): return self._filter
+
+    @filter.setter
+    def filter(self, filter):
+        self._filter = filter or all_pass_filter
+
+    def _set_default_request_param(self, request):
         """
             若 self 中存在与 request 相同名称的属性，则将其值复制给 request
         """
@@ -39,7 +47,7 @@ class Spider(ABC):
         """
         request = Request.of(url)
         if use_default_params:
-            request = self.set_default_request_param(request)
+            request = self._set_default_request_param(request)
         return request
 
     def from_url_iter(self, urls: Iterable[str], use_default_params=True):
@@ -50,7 +58,8 @@ class Spider(ABC):
         return range(0)
 
     @abstractmethod
-    def crawl(self, request: Request): pass
+    def crawl(self, request: Request):
+        pass
 
 
 # class MultiThreadSpider(Spider, SimpleClient):
@@ -72,8 +81,7 @@ class AsyncSpider(Spider, AsyncClient):
     @abstractmethod
     def handle(self, response: Response):
         if isinstance(response, HTMLResponse):
-            requests = self.from_url_iter(self.extractor.extract(response))
-            yield from filter(lambda r: self.filter.accept(r.uri), requests)
+            yield from self.from_url_iter(self.extractor.extract(response))
         else:
             yield from self._nothing()
 
@@ -83,4 +91,5 @@ class AsyncSpider(Spider, AsyncClient):
         new_requests = request.handler(response)
         if not new_requests:
             return self._nothing()
-        return (Request.of(new_request) for new_request in new_requests)
+        return filter(lambda r: self.filter.accept(r.uri),
+                      (Request.of(new_request) for new_request in new_requests))

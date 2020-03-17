@@ -24,24 +24,23 @@ def handle(self, response: HTMLResponse):
     print([title.text for title in titles])
     yield from super().handle(response)
 ```
-`super().handle(response)` 实际上做了三件事:
+`super().handle(response)` 实际上做了两件事:
 
-1.  获取所有 `a` 标签的 `href` 属性
-2.  利用 `self.filter` 筛选出需要的 URL
+1.  获取所有 `a` 标签的 `href` 属性，即页面中可点击的 URL
 3. 使用默认参数将其组装为 `Request` 对象(关于这两个概念将在后面的章节提到)
 
 *注意 `super().handle(response)`  只是产生了新的请求对象，你仍然需要使用 ` yield from ` 将 `handle` 构造为一个生成器。*
 
-其中步骤 2 中的 `self.filter` 可以更改，来达到提取不同 URL 的目的。在 `easy_spider.filters.build_in` 内置了几种 `filter`:
+此外，`handler` 返回的所有目标还将使用利用`self.filter`筛选出需要的 URL `easy_spider.filters.build_in` 内置了几种 `filter`:
 
 * RegexFilter: 正则表达式过滤器
 * static_filter: 静态文件过滤器
 * url_filter: 合法 URL 过滤器
 * html_filter: 响应类型为 html 的 URL 过滤器(通过后缀判定，有一定的误判几率)
-* all_pass_filter: 全接收过滤器
+* all_pass_filter: 全部接收过滤器
 * all_reject_filter: 全部拒绝过滤器
 
-当你不使用 `super().handle(response)` 时，`self.filter` 并不会起任何作用。
+`self.filter` 默认为 `html_filter`，如果你不需要，则可以将其设为 `None`  或 `all_pass_filter`。
 
 ## 进阶使用
 

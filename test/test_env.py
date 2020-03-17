@@ -25,7 +25,7 @@ class TestCore(unittest.TestCase):
     def test_set_default_method(self):
         r = Request("test")
         self.my_spider.method = 'POST'
-        self.my_spider.set_default_request_param(r)
+        self.my_spider._set_default_request_param(r)
         self.assertEqual(r.method, 'POST')
 
     def test_core(self):
