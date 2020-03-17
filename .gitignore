@@ -4,3 +4,6 @@
 **/*.log
 demo/quick_start.py
 .coverage
+easy_spider.egg-info
+dist
+.pypirc
