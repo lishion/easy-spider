@@ -1,4 +1,5 @@
 import setuptools
+from easy_spider import __version__
 
 with open("README.md", encoding='utf-8') as fd:
     long_description = fd.read()
@@ -10,7 +11,7 @@ packages = setuptools.find_packages(exclude=("test", "demo"))
 
 setuptools.setup(
     name="easy-spider",
-    version="1.0.2",
+    version=__version__,
     author="lin3x",
     author_email="544670411@qq.com",
     description="A asynchronous spider with aiohttp",

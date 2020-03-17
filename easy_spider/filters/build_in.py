@@ -4,7 +4,7 @@ from bloom_filter import BloomFilter
 
 # 非 html 后缀， 来源于 scrapy
 # https://github.com/scrapy/scrapy/blob/master/scrapy/linkextractors/__init__.py
-IGNORED_EXTENSIONS = {
+_IGNORED_EXTENSIONS = {
     # archives
     '7z', '7zip', 'bz2', 'rar', 'tar', 'tar.gz', 'xz', 'zip',
 
@@ -27,7 +27,7 @@ IGNORED_EXTENSIONS = {
     'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'js'
 }
 
-static_filter = CustomFilter(lambda url: get_extension(url) in IGNORED_EXTENSIONS)
+static_filter = CustomFilter(lambda url: get_extension(url) in _IGNORED_EXTENSIONS)
 url_filter = RegexFilter(r"^https?:\/{2}[^\s]*?(\?.*)?$")
 html_filter = url_filter - static_filter
 all_pass_filter = CustomFilter(lambda _: True)
