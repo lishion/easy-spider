@@ -14,13 +14,13 @@ class AsyncSpiderEvn:
 
     def _prepare(self):
         if self._session is None:
-            self.session = ClientSession()
+            self._session = ClientSession()
         if self._client is None:
             self._client = AsyncClient()
 
     async def _run_spider(self, spider):
         self._prepare()
-        spider.set_session(self.session)
+        spider.set_session(self._session)
         task = AsyncTask(spider)
         await task.run()
 
@@ -35,10 +35,9 @@ class AsyncSpiderEvn:
         self.__del__()
 
     def __del__(self):
-        if self.loop.is_closed():
+        if not self._loop or self.loop.is_closed():
             return
-        if hasattr(self, "session") and self.session:
-            self.loop.run_until_complete(self.session.close())
+        self._session and self.loop.run_until_complete(self._session.close())
 
 
 async_env = AsyncSpiderEvn()
