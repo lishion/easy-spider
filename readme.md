@@ -2,7 +2,7 @@
 ## quick start
 ``` python
 from easy_spider import async_env, AsyncSpider, Request, HTMLResponse
-
+    
 class MySpider(AsyncSpider):
 
     def __init__(self):
@@ -16,7 +16,7 @@ class MySpider(AsyncSpider):
 async_env.run(MySpider())
 ```
 
-本例子中爬取了[github-blog](https://github.blog/) 。其中 `self.start_targets = ["https://github.blog/"]` 设置了初始需要爬取的目标。`handle(self, response: HTMLResponse)` 方法用于处理服务器返回的 `response`，并产生新的需要爬取得目标。因此 `handle` 方法返回值的类型必须为 `iterable`，或  `handle` 方法自身为一个生成器。在 `easy spider` 中，`AsyncSpider` 已经实现了一个从网页中抽取潜在爬取目标的 `handle` 方法，因此如果需要对[github-blog](https://github.blog/)上存在的 URL 进行进一步的爬取，可以:
+本例子中爬取了[github-blog](https://github.blog/) 。其中 `self.start_targets = ["https://github.blog/"]` 设置了初始需要爬取的目标。`handle(self, response: HTMLResponse)` 方法用于处理服务器返回的 `response`，并产生新的需要爬取得目标，这些目标将被放入爬取队列中随后进行爬取。因此 `handle` 方法返回值的类型必须为 `iterable`，或  `handle` 方法自身为一个生成器，当然也可以返回 `None` 或什么都不返回 。在 `easy spider` 中，`AsyncSpider` 已经实现了一个从网页中抽取潜在爬取目标的 `handle` 方法，因此如果需要对[github-blog](https://github.blog/)上存在的 URL 进行进一步的爬取，可以:
 
 ``` python
 def handle(self, response: HTMLResponse):
@@ -31,7 +31,7 @@ def handle(self, response: HTMLResponse):
 
 *注意 `super().handle(response)`  只是产生了新的请求对象，你仍然需要使用 ` yield from ` 将 `handle` 构造为一个生成器。*
 
-此外，`handler` 返回的所有目标还将使用利用`self.filter`筛选出需要的 URL `easy_spider.filters.build_in` 内置了几种 `filter`:
+此外，`handler` 返回的所有目标还将使用 `self.filter` 筛选出需要的 URL。 `easy_spider.filters.build_in` 内置了几种 `filter`:
 
 * RegexFilter: 正则表达式过滤器
 * static_filter: 静态文件过滤器
@@ -46,7 +46,7 @@ def handle(self, response: HTMLResponse):
 
 ### 构建自己的URL提取方式
 
-采用默认的提取方式或许无法满足你的需求，可以采用自己的方式提取 URL:
+采用默认提取 URL 的方式或许无法满足你的需求，可以采用自己的方式提取 URL:
 
 ``` python
     def handle(self, response: HTMLResponse):

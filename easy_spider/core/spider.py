@@ -80,12 +80,18 @@ class AsyncSpider(Spider, AsyncClient):
 
     @abstractmethod
     def handle(self, response: Response):
+        """
+        从 Response 中提取 Request，提取的 Request 将会设置默认参数
+        """
         if isinstance(response, HTMLResponse):
             yield from self.from_url_iter(self.extractor.extract(response))
         else:
             yield from self._nothing()
 
     async def crawl(self, request: Request):
+        """
+        爬虫主要逻辑
+        """
         response = await self.do_request(request)
         request.handler = request.handler if request.handler else self.handle
         new_requests = request.handler(response)
