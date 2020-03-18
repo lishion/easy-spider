@@ -13,13 +13,9 @@ class Filter(ABC):
         return NotFilter(self)
 
     def __add__(self, other):
-        if isinstance(other, DependenceFilter):
-            other.pre_filter = self
         return AndChainFilter(self, other)
 
     def __or__(self, other):
-        if isinstance(other, DependenceFilter):
-            raise TypeError("can't use operator symbol `|` with filter {}".format(other.__class__.__name__))
         return OrChainFilter(self, other)
 
     def __sub__(self, other):
@@ -33,9 +29,6 @@ class DependenceFilter(Filter):
 
     @abstractmethod
     def accept(self, value: Any): pass
-
-    def __or__(self, other):
-        raise TypeError("can't use operator symbol `|` with filter {}".format(self.__class__.__name__))
 
 
 class NotFilter(Filter):
@@ -80,16 +73,10 @@ class AndChainFilter(Filter):
         return all([f.accept(value) for f in self._filters])
 
     def __add__(self, other):
-        if isinstance(other, DependenceFilter):
-            other.pre_filter = self
-            return AndChainFilter(self, other)
         self._filters.append(other)
         return self
 
     def __sub__(self, other):
-        if isinstance(other, DependenceFilter):
-            other.pre_filter = self
-            return AndChainFilter(self, NotFilter(other))
         self._filters.append(NotFilter(other))
         return self
 
@@ -102,7 +89,5 @@ class OrChainFilter(Filter):
         return any([f.accept(value) for f in self._filters])
 
     def __or__(self, other):
-        if isinstance(other, DependenceFilter):
-            other.pre_filter = self
         self._filters.append(other)
         return self

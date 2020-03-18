@@ -68,29 +68,11 @@ class TestFilter(unittest.TestCase):
         self.assert_false(html_filter, "http://www.baidu.com/b.mP3")
 
     def test_history_filter(self):
-        hf = html_filter + BloomFilter(1000, 0.001)
+        hf = BloomFilter(1000, 0.001)
+        hf.pre_filter = html_filter
         self.assert_false(hf, "123231")
         self.assert_true(hf, "http://123123")
         self.assert_false(hf, "http://123123")
-
-    def test_dependence_filter(self):
-        hf = html_filter + BloomFilter(1000, 0.001) + URLRegFilter(".*jpg$")
-        self.assert_false(hf, "123231")
-        self.assert_false(hf, "http://123123")
-        self.assert_false(hf, "http://123123")
-        self.assertTrue(hf, "http://123123jpg")
-
-        with self.assertRaises(TypeError):
-            html_filter | BloomFilter(1000, 0.001)
-
-        with self.assertRaises(TypeError):
-            BloomFilter(1000, 0.001) | html_filter
-
-        hf = html_filter + HashFilter() + URLRegFilter(".*jpg$")
-        self.assert_false(hf, "123231")
-        self.assert_false(hf, "http://123123")
-        self.assert_false(hf, "http://123123")
-        self.assertTrue(hf, "http://123123jpg")
 
 
 if __name__ == '__main__':

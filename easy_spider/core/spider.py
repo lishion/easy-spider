@@ -4,7 +4,7 @@ from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider import tool
 from abc import ABC, abstractmethod
-from easy_spider.filters.build_in import html_filter, all_pass_filter, HashFilter, CrawledFilter
+from easy_spider.filters.build_in import Filter, html_filter, all_pass_filter, HashFilter, CrawledFilter
 from typing import Iterable
 
 
@@ -33,16 +33,25 @@ class Spider(ABC):
     def crawled_filter(self, filter):
         if filter and not isinstance(filter, CrawledFilter):
             raise TypeError("crawled_filter must be a CrawledFilter, got a {}".format(filter.__class__.__name__))
-        self.crawled_filter = filter
+        self._crawled_filter = filter
 
     @property
     def filter(self): return self._filter
 
     @filter.setter
     def filter(self, filter):
-        self._filter = filter or all_pass_filter
+        filter = filter or all_pass_filter
+        self._filter = filter
+
+    def _get_whole_filter(self) -> Filter:
+        """
+            将 self.filter 与 self.crawled_filter 组成最终的 filter
+        """
+        filter = self.filter
         if self.crawled_filter:
-            self._filter += self.crawled_filter
+            self.crawled_filter.pre_filter = self.filter
+            filter = self.crawled_filter
+        return filter
 
     @staticmethod
     def _process_request_from_handler(request_like_iter, source_request):
@@ -118,4 +127,4 @@ class AsyncSpider(Spider, AsyncClient):
         if not request_like_iter:
             return self._nothing()
         new_requests = self._process_request_from_handler(request_like_iter, request)
-        return filter(self.filter.accept, new_requests)
+        return filter(self._get_whole_filter().accept, new_requests)
