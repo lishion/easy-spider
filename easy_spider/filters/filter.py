@@ -1,12 +1,12 @@
 from abc import ABC
 from easy_spider.network.request import Request
 import re
-from typing import List
+from typing import List, Any
 
 
 class Filter(ABC):
 
-    def accept(self, url: str) -> bool: pass
+    def accept(self, value: Any) -> bool: pass
 
     def __neg__(self):
         return NotFilter(self)
@@ -26,8 +26,8 @@ class NotFilter(Filter):
         super().__init__()
         self.filter = filter
 
-    def accept(self, url: str) -> bool:
-        return not self.filter.accept(url)
+    def accept(self, value: Any) -> bool:
+        return not self.filter.accept(value)
 
 
 class CustomFilter(Filter):
@@ -35,24 +35,32 @@ class CustomFilter(Filter):
         super().__init__()
         self._filter_func = filter_func
 
-    def accept(self, url: str) -> bool:
-        return self._filter_func(url)
+    def accept(self, value: Any) -> bool:
+        return self._filter_func(value)
 
 
 class RegexFilter(Filter):
     def __init__(self, re_expr):
         self._re_expr = re.compile(re_expr)
 
-    def accept(self, url: str) -> bool:
-        return bool(self._re_expr.match(url))
+    def accept(self, string: str) -> bool:
+        return bool(self._re_expr.match(string))
+
+
+class URLFilter(Filter):
+    def __init__(self, filter):
+        self.filter = filter
+
+    def accept(self, request: Request) -> bool:
+        return self.filter.accept(request.url)
 
 
 class AndChainFilter(Filter):
     def __init__(self, *filters: Filter):
         self._filters: List[Filter] = list(filters)
 
-    def accept(self, url: str) -> bool:
-        return all([f.accept(url) for f in self._filters])
+    def accept(self, value: Any) -> bool:
+        return all([f.accept(value) for f in self._filters])
 
     def __add__(self, other):
         self._filters.append(other)
@@ -67,8 +75,8 @@ class OrChainFilter(Filter):
     def __init__(self, *filters: Filter):
         self._filters: List[Filter] = list(filters)
 
-    def accept(self, url: str) -> bool:
-        return any([f.accept(url) for f in self._filters])
+    def accept(self, value: Any) -> bool:
+        return any([f.accept(value) for f in self._filters])
 
     def __or__(self, other):
         self._filters.append(other)

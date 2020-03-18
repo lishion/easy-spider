@@ -1,6 +1,7 @@
 from easy_spider.filters.filter import *
 from easy_spider.tool import get_extension
 from bloom_filter import BloomFilter
+from functools import partial
 
 # 非 html 后缀， 来源于 scrapy
 # https://github.com/scrapy/scrapy/blob/master/scrapy/linkextractors/__init__.py
@@ -27,8 +28,16 @@ _IGNORED_EXTENSIONS = {
     'css', 'pdf', 'exe', 'bin', 'rss', 'dmg', 'iso', 'apk', 'js'
 }
 
-static_filter = CustomFilter(lambda url: get_extension(url) in _IGNORED_EXTENSIONS)
-url_filter = RegexFilter(r"^https?:\/{2}[^\s]*?(\?.*)?$")
+
+def URLRegFilter(reg_expr):
+    """
+    使 RegFilter 直接作用于 Request 对象的 uri
+    """
+    return URLFilter(RegexFilter(reg_expr))
+
+
+static_filter = URLFilter(CustomFilter(lambda url: get_extension(url) in _IGNORED_EXTENSIONS))
+url_filter = URLRegFilter(r"^https?:\/{2}[^\s]*?(\?.*)?$")
 html_filter = url_filter - static_filter
 all_pass_filter = CustomFilter(lambda _: True)
 all_reject_filter = CustomFilter(lambda _: False)
@@ -45,10 +54,11 @@ class HistoryFilter(Filter):
         self._history_filter = BloomFilter(max_elements, error_rate)
         self._pre_filter = pre_filter or all_pass_filter
 
-    def accept(self, url: str) -> bool:
-        pre_filter_accept = self._pre_filter.accept(url)
+    def accept(self, request: Request) -> bool:
+        pre_filter_accept = self._pre_filter.accept(request)
         if not pre_filter_accept:  # 如果前置过滤器返回 False 则直接返回 False
             return False
+        url = request.url
         history_filter_accept = url not in self._history_filter
         history_filter_accept and self._history_filter.add(url)  # 如果不存在于布隆过滤器中，则记录
         return history_filter_accept
