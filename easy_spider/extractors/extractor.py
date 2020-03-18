@@ -13,6 +13,7 @@ class SimpleBSExtractor(Extractor):
 
     def extract(self, response: HTMLResponse) -> Generator[str, None, None]:
         for tag_a in response.bs.find_all("a"):
-            if tag_a["href"]:
-                yield response.url_join(tag_a["href"])
+            href = tag_a.get("href")
+            if href:
+                yield response.url_join(href)
 
