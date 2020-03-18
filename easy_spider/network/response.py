@@ -6,10 +6,11 @@ from cached_property import cached_property
 
 
 class Response(ABC):
-    def __init__(self, body, url, headers):
+    def __init__(self, body, url, headers, request=None):
         self.body = body
         self.url = url
         self.headers = headers
+        self.request = request
 
     def url_join(self, other_url):
         return urljoin(self.url, other_url)

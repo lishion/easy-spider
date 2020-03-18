@@ -10,15 +10,19 @@ class Client(ABC):
     def do_request(self, resource: Request) -> Response: pass
 
     @staticmethod
-    def to_response(content, url, headers):
+    def to_response(request, content, url, headers):
         content_type = headers.get("Content-Type")
         args = (content, url, headers)
+        response = None
         if content_type:
             if "text/html" in content_type:
-                return HTMLResponse(*args)
+                response = HTMLResponse(*args)
             elif "text/" in content_type:
-                return TextResponse(*args)
-        return Response(*args)
+                response = TextResponse(*args)
+        else:
+            response = Response(*args)
+        response.request = request
+        return response
 
 
 class SimpleClient(Client):
@@ -56,4 +60,4 @@ class AsyncClient(Client):
             raise ValueError("未知数据类型 {} ，仅支持 json 或 form")
         raw_response = await self._session.request(request.method, request.url, **common_params)
         content = await raw_response.content.read()
-        return self.to_response(content, str(raw_response.url), raw_response.headers)
+        return self.to_response(request, content, str(raw_response.url), raw_response.headers)
