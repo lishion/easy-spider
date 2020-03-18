@@ -1,7 +1,7 @@
 import setuptools
 from easy_spider import __version__
 
-with open("README.md", encoding='utf-8') as fd:
+with open("readme.md", encoding='utf-8') as fd:
     long_description = fd.read()
 
 with open("requirements.txt", encoding="utf-8") as fd:
