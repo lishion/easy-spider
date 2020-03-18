@@ -6,43 +6,43 @@ import unittest
 class TestFilter(unittest.TestCase):
 
     def test_reg_filter(self):
-        f = RegexFilter(r"http://")
-        self.assertTrue(f.accept("http://www.baidu.com"))
+        f = URLRegFilter(r"http://")
+        self.assertTrue(f.accept(Request.of("http://www.baidu.com")))
 
     def assert_true(self, r, url):
-        self.assertTrue(r.accept(url))
+        self.assertTrue(r.accept(Request.of(url)))
 
     def assert_false(self, r, url):
-        self.assertFalse(r.accept(url))
+        self.assertFalse(r.accept(Request.of(url)))
 
     def test_and_op(self):
-        r = RegexFilter("") + RegexFilter("") + RegexFilter("")
+        r = URLRegFilter("") + URLRegFilter("") + URLRegFilter("")
         self.assertEqual(type(r), AndChainFilter)
 
     def test_or_op(self):
-        r = RegexFilter("") | RegexFilter("") | RegexFilter("")
+        r = URLRegFilter("") | URLRegFilter("") | URLRegFilter("")
         self.assertEqual(type(r), OrChainFilter)
 
     def test_and_filter(self):
-        r = RegexFilter("http://") + RegexFilter(".*?test")
+        r = URLRegFilter("http://") + URLRegFilter(".*?test")
         self.assert_false(r, "http://www.baidu.com")
         self.assert_true(r, "http://www.test.com")
 
     def test_or_filter(self):
-        r = RegexFilter("http://") | RegexFilter("https://")
+        r = URLRegFilter("http://") | URLRegFilter("https://")
         self.assert_true(r, "http://www.baidu.com")
         self.assert_true(r, "https://www.baidu.com")
 
     def test_not_filter(self):
-        r = -RegexFilter("javascript:")
+        r = -URLRegFilter("javascript:")
         self.assert_false(r, "javascript:")
 
     def test_and_not_filter(self):
-        r = RegexFilter(".*") + (-RegexFilter("javascript:"))
+        r = URLRegFilter(".*") + (-URLRegFilter("javascript:"))
         self.assert_true(r, "http://www.baidu.com")
         self.assert_false(r, "javascript:func(1)")
 
-        r = RegexFilter(".*") - RegexFilter("javascript:") - RegexFilter("https://")
+        r = URLRegFilter(".*") - URLRegFilter("javascript:") - URLRegFilter("https://")
         self.assert_true(r, "http://www.baidu.com")
         self.assert_false(r, "https://www.baidu.com")
         self.assert_false(r, "javascript:func(1)")
@@ -55,10 +55,10 @@ class TestFilter(unittest.TestCase):
         self.assert_false(html_filter, "http://www.baidu.com/b.mP3")
 
     def test_bloom_filter(self):
-        hf = history_filter(html_filter, 1000, 0.001)
-        self.assertFalse(hf.accept("123231"))
-        self.assertTrue(hf.accept("http://123123"))
-        self.assertFalse(hf.accept("http://123123"))
+        hf = HistoryFilter(html_filter, 1000, 0.001)
+        self.assertFalse(hf.accept(Request.of("123231")))
+        self.assertTrue(hf.accept(Request.of("http://123123")))
+        self.assertFalse(hf.accept(Request.of("http://123123")))
 
 
 if __name__ == '__main__':

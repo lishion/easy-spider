@@ -87,7 +87,7 @@ class TestNetWork(unittest.TestCase):
 
     def test_build_request(self):
         r = Request.of("http://test")
-        self.assertEqual(r.uri, "http://test")
+        self.assertEqual(r.url, "http://test")
         r1 = Request.of(r)
         self.assertIs(r1, r)
         with self.assertRaises(TypeError):

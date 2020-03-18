@@ -97,5 +97,4 @@ class AsyncSpider(Spider, AsyncClient):
         new_requests = request.handler(response)
         if not new_requests:
             return self._nothing()
-        return filter(lambda r: self.filter.accept(r.uri),
-                      (Request.of(new_request) for new_request in new_requests))
+        return filter(self.filter.accept, (Request.of(new_request) for new_request in new_requests))

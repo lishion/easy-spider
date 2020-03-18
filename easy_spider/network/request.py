@@ -4,10 +4,10 @@ from collections import deque
 
 
 class Request(ABC):
-    def __init__(self, uri, handler=None, method='GET', priority=0, tag="any",
+    def __init__(self, url, handler=None, method='GET', priority=0, tag="any",
                  headers=None, cookies=None, timeout=None, params=None, data=None,
                  data_format='form', encoding='utf-8'):
-        self.uri: str = uri
+        self.url: str = url
         self._handler = handler
         self.priority: int = priority
         self.tag = tag
@@ -31,7 +31,7 @@ class Request(ABC):
         self._handler = callback
 
     def __repr__(self):
-        return "[method={} uri={}]".format(self.method, self.uri)
+        return "[method={} uri={}]".format(self.method, self.url)
 
     def __str__(self):
         return self.__repr__()
