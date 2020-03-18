@@ -1,5 +1,5 @@
 from easy_spider.network.request import Request
-from easy_spider.network.client import AsyncClient, SimpleClient
+from easy_spider.network.client import AsyncClient
 from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider import tool

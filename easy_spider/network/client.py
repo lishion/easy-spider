@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from easy_spider.network.request import Request
 from easy_spider.network.response import (Response, TextResponse, HTMLResponse)
-from requests import Session
 from aiohttp import ClientSession, ClientTimeout
 
 
@@ -23,12 +22,13 @@ class Client(ABC):
 
 
 class SimpleClient(Client):
-    def __init__(self, session):
-        self._session: Session = session
-
-    def do_request(self, resource: Request) -> Response:
-        raw_response = self._session.get(resource.uri)
-        return self.to_response(raw_response.content, raw_response.url, raw_response.headers)
+    pass
+    # def __init__(self, session):
+    #     self._session: Session = session
+    #
+    # def do_request(self, resource: Request) -> Response:
+    #     raw_response = self._session.get(resource.uri)
+    #     return self.to_response(raw_response.content, raw_response.url, raw_response.headers)
 
 
 class AsyncClient(Client):
