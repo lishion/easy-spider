@@ -31,6 +31,13 @@ class Spider(ABC):
     def filter(self, filter):
         self._filter = filter or all_pass_filter
 
+    @staticmethod
+    def _process_request_from_handler(request_like_iter, source_request):
+        for request_like in request_like_iter:
+            new_request = Request.of(request_like)
+            new_request.generation = source_request.generation + 1
+            yield new_request
+
     def _set_default_request_param(self, request):
         """
             若 self 中存在与 request 相同名称的属性，则将其值复制给 request
@@ -94,7 +101,8 @@ class AsyncSpider(Spider, AsyncClient):
         """
         response = await self.do_request(request)
         request.handler = request.handler if request.handler else self.handle
-        new_requests = request.handler(response)
-        if not new_requests:
+        request_like_iter = request.handler(response)
+        if not request_like_iter:
             return self._nothing()
-        return filter(self.filter.accept, (Request.of(new_request) for new_request in new_requests))
+        new_requests = self._process_request_from_handler(request_like_iter, request)
+        return filter(self.filter.accept, new_requests)
