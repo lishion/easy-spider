@@ -40,8 +40,7 @@ class Spider(ABC):
 
     @filter.setter
     def filter(self, filter):
-        filter = filter or all_pass_filter
-        self._filter = filter
+        self._filter = filter or all_pass_filter
 
     def _get_whole_filter(self) -> Filter:
         """
@@ -49,12 +48,15 @@ class Spider(ABC):
         """
         filter = self.filter
         if self.crawled_filter:
-            self.crawled_filter.pre_filter = self.filter
-            filter = self.crawled_filter
+            self.crawled_filter.pre_filter = self.filter   # 如果 crawled_filter 不为空，则需要设置其 pre_filter
+            filter = self.crawled_filter  # 并将 crawled_filter 设置为最终的 filter
         return filter
 
     @staticmethod
-    def _process_request_from_handler(request_like_iter, source_request):
+    def _process_request_after_handler(request_like_iter, source_request):
+        """
+            在 handler 之后对 request 进行进一步处理
+        """
         for request_like in request_like_iter:
             new_request = Request.of(request_like)
             new_request.generation = source_request.generation + 1
@@ -122,9 +124,9 @@ class AsyncSpider(Spider, AsyncClient):
         爬虫主要逻辑
         """
         response = await self.do_request(request)
-        request.handler = request.handler if request.handler else self.handle
-        request_like_iter = request.handler(response)
+        handler = request.handler or self.handle
+        request_like_iter = handler(response)
         if not request_like_iter:
             return self._nothing()
-        new_requests = self._process_request_from_handler(request_like_iter, request)
+        new_requests = self._process_request_after_handler(request_like_iter, request)
         return filter(self._get_whole_filter().accept, new_requests)

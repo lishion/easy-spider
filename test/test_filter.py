@@ -74,6 +74,12 @@ class TestFilter(unittest.TestCase):
         self.assert_true(hf, "http://123123")
         self.assert_false(hf, "http://123123")
 
+        hf = HashFilter()
+        hf.pre_filter = html_filter
+        self.assert_false(hf, "123231")
+        self.assert_true(hf, "http://123123")
+        self.assert_false(hf, "http://123123")
+
 
 if __name__ == '__main__':
     unittest.main()
