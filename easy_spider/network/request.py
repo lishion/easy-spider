@@ -95,7 +95,7 @@ class SimpleRequestQueue(RequestQueue):
 
     def get(self) -> Request:
         try:
-            return self._queue.pop()
+            return self._queue.popleft()
         except IndexError:
             return None
 
