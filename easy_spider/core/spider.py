@@ -4,7 +4,7 @@ from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider import tool
 from abc import ABC, abstractmethod
-from easy_spider.filters.build_in import html_filter, all_pass_filter
+from easy_spider.filters.build_in import html_filter, all_pass_filter, HashFilter, CrawledFilter
 from typing import Iterable
 
 
@@ -15,6 +15,7 @@ class Spider(ABC):
         self.num_threads = 1
         self._filter = html_filter
         self.extractor = SimpleBSExtractor()
+        self._crawled_filter = HashFilter()
 
     @property
     def start_targets(self):
@@ -25,11 +26,23 @@ class Spider(ABC):
         self._start_targets = self.from_url_iter(targets, use_default_params=False)
 
     @property
+    def crawled_filter(self):
+        return self._crawled_filter
+
+    @crawled_filter.setter
+    def crawled_filter(self, filter):
+        if filter and not isinstance(filter, CrawledFilter):
+            raise TypeError("crawled_filter must be a CrawledFilter, got a {}".format(filter.__class__.__name__))
+        self.crawled_filter = filter
+
+    @property
     def filter(self): return self._filter
 
     @filter.setter
     def filter(self, filter):
         self._filter = filter or all_pass_filter
+        if self.crawled_filter:
+            self._filter += self.crawled_filter
 
     @staticmethod
     def _process_request_from_handler(request_like_iter, source_request):

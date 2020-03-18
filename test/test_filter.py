@@ -29,9 +29,22 @@ class TestFilter(unittest.TestCase):
         self.assert_true(r, "http://www.test.com")
 
     def test_or_filter(self):
-        r = URLRegFilter("http://") | URLRegFilter("https://")
+        r = URLRegFilter("http://") | URLRegFilter("https://") + URLRegFilter(".*jpg$")
         self.assert_true(r, "http://www.baidu.com")
-        self.assert_true(r, "https://www.baidu.com")
+        self.assert_false(r, "https://www.baidu.com")
+        self.assert_true(r, "https://www.baidu.com.jpg")
+
+        r = (URLRegFilter("a") | URLRegFilter("b")) + (URLRegFilter("a") | URLRegFilter("c"))
+        self.assert_true(r, "a")
+        self.assert_false(r, "b")
+        self.assert_false(r, "c")
+        self.assert_false(r, "d")
+
+        r = (URLRegFilter("^a") + URLRegFilter(".*b$")) | (URLRegFilter("^c") + URLRegFilter(".*d$"))
+        self.assert_true(r, "ab")
+        self.assert_true(r, "cd")
+        self.assert_false(r, "c")
+        self.assert_false(r, "d")
 
     def test_not_filter(self):
         r = -URLRegFilter("javascript:")
@@ -54,11 +67,30 @@ class TestFilter(unittest.TestCase):
         self.assert_false(html_filter, "http://www.baidu.com/b.Mp4")
         self.assert_false(html_filter, "http://www.baidu.com/b.mP3")
 
-    def test_bloom_filter(self):
-        hf = HistoryFilter(html_filter, 1000, 0.001)
-        self.assertFalse(hf.accept(Request.of("123231")))
-        self.assertTrue(hf.accept(Request.of("http://123123")))
-        self.assertFalse(hf.accept(Request.of("http://123123")))
+    def test_history_filter(self):
+        hf = html_filter + BloomFilter(1000, 0.001)
+        self.assert_false(hf, "123231")
+        self.assert_true(hf, "http://123123")
+        self.assert_false(hf, "http://123123")
+
+    def test_dependence_filter(self):
+        hf = html_filter + BloomFilter(1000, 0.001) + URLRegFilter(".*jpg$")
+        self.assert_false(hf, "123231")
+        self.assert_false(hf, "http://123123")
+        self.assert_false(hf, "http://123123")
+        self.assertTrue(hf, "http://123123jpg")
+
+        with self.assertRaises(TypeError):
+            html_filter | BloomFilter(1000, 0.001)
+
+        with self.assertRaises(TypeError):
+            BloomFilter(1000, 0.001) | html_filter
+
+        hf = html_filter + HashFilter() + URLRegFilter(".*jpg$")
+        self.assert_false(hf, "123231")
+        self.assert_false(hf, "http://123123")
+        self.assert_false(hf, "http://123123")
+        self.assertTrue(hf, "http://123123jpg")
 
 
 if __name__ == '__main__':

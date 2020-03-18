@@ -28,6 +28,12 @@ class TestSpider(unittest.TestCase):
     def test_async_spider(self):
         run_and_get_result(self.async_spider())
 
+    def test_crawled_spider(self):
+        spider = MySpider()
+        with self.assertRaises(TypeError):
+            spider.crawled_filter = spider.filter
+
+
 
 if __name__ == '__main__':
     unittest.main()
