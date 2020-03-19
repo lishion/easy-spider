@@ -70,7 +70,7 @@ class AndChainFilter(Filter):
         self._filters: List[Filter] = list(filters)
 
     def accept(self, value: Any) -> bool:
-        return all([f.accept(value) for f in self._filters])
+        return all((f.accept(value) for f in self._filters))
 
     def __add__(self, other):
         self._filters.append(other)
@@ -86,7 +86,7 @@ class OrChainFilter(Filter):
         self._filters: List[Filter] = list(filters)
 
     def accept(self, value: Any) -> bool:
-        return any([f.accept(value) for f in self._filters])
+        return any((f.accept(value) for f in self._filters))
 
     def __or__(self, other):
         self._filters.append(other)
