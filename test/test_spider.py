@@ -34,6 +34,5 @@ class TestSpider(unittest.TestCase):
             spider.crawled_filter = spider.filter
 
 
-
 if __name__ == '__main__':
     unittest.main()
