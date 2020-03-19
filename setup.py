@@ -1,5 +1,5 @@
 import setuptools
-from easy_spider import __version__
+from os.path import join
 
 with open("readme.md", encoding='utf-8') as fd:
     long_description = fd.read()
@@ -7,11 +7,20 @@ with open("readme.md", encoding='utf-8') as fd:
 with open("requirements.txt", encoding="utf-8") as fd:
     install_requires = [line for line in fd.read().split("\n") if line]
 
+with open(join("easy_spider", "__init__.py")) as fd:
+    for line in fd:
+        line = line.lstrip(" ")
+        if line.startswith("__version__"):
+            try:
+                version = line.split("=")[1].strip().strip('"')
+            except Exception as e:
+                raise Exception("find version error, cause by `{}`".format(e))
+
 packages = setuptools.find_packages(exclude=("test", "demo"))
 
 setuptools.setup(
     name="easy-spider",
-    version=__version__,
+    version=version,
     author="lin3x",
     author_email="544670411@qq.com",
     description="A asynchronous spider with aiohttp",
