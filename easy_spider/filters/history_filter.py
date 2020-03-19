@@ -9,7 +9,7 @@ class CrawledFilter(DependenceFilter, ABC):
     """
         已爬取过滤器， 依赖于其他过滤器的结果
         pre_filter: 前置过滤器，已爬取过滤器将依赖于前置过滤器的返回结果
-        若已爬取过滤器以及前置过滤器都返回 True 才记录到布隆过滤器中，并返回 True
+        若已爬取过滤器以及前置过滤器都返回 True 则记录到已爬取过滤器，并返回 True
         否则返回 False
     """
 
