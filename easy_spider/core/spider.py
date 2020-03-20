@@ -23,7 +23,7 @@ class Spider(ABC):
 
     @start_targets.setter
     def start_targets(self, targets):
-        self._start_targets = self.from_url_iter(targets, use_default_params=False)
+        self._start_targets = self.from_url_iter(targets)
 
     @property
     def crawled_filter(self):
