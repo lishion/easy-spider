@@ -7,12 +7,12 @@ LOG_SETTING = {
     "version": 1,
     "formatters": {
         "default": {
-            "format": "%(asctime)s %(levelname)-8s %(filename)s %(funcName)s %(lineno)d %(message)s",
+            "format": "[%(asctime)s] %(levelname)s %(filename)s %(funcName)s(%(lineno)d) %(message)s",
             "datefmt": '%Y-%m-%d %H:%M:%S'
         },
         "colored": {
             '()': 'colorlog.ColoredFormatter',
-            'format': "%(log_color)s[%(asctime)s] %(levelname)-8s %(filename)s %(funcName)s(%(lineno)d) %(message)s",
+            'format': "%(log_color)s[%(asctime)s] %(levelname)s %(message)s",
             'datefmt': '%Y-%m-%d %H:%M:%S'
         }
     },
@@ -32,11 +32,16 @@ LOG_SETTING = {
         }
     },
     "loggers": {
-        "custom": {
+        "easy_spider.console": {
             "level": "INFO",
-            "handlers": ["console", "file"]
+            "handlers": ["console"]
+        },
+        "easy_spider.file": {
+            "level": "INFO",
+            "handlers": ["file"]
         }
     }
 }
 logging.config.dictConfig(LOG_SETTING)
-logger = logging.getLogger("custom")
+console_logger = logging.getLogger("easy_spider.console")
+file_logger = logging.getLogger("easy_spider.file")

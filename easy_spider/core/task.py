@@ -1,5 +1,5 @@
 from easy_spider.core.spider import AsyncSpider
-from easy_spider.log import logger
+from easy_spider.log import console_logger, file_logger
 from easy_spider.network.request import RequestQueue, SimpleRequestQueue
 import asyncio
 from abc import ABC, abstractmethod
@@ -77,8 +77,9 @@ class AsyncTask(AbstractTask):
                 self._num_running_task += 1
                 new_requests = await self._spider.crawl(request)
                 self._request_queue.put_many(new_requests)
-                logger.info("成功 {} ".format(request))
+                console_logger.info("成功 {} ".format(request))
             except Exception as e:
-                logger.warning("失败 {}  原因 {}".format(request, e))
+                console_logger.warning("失败 %s  原因 %s", request, e)
+                file_logger.warning("失败 %s", request, exc_info=True)
             finally:
                 self._num_running_task -= 1
