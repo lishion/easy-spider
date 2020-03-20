@@ -6,4 +6,3 @@
 easy_spider.egg-info
 dist
 .pypirc
-test*.py
