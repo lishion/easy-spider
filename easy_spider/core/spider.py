@@ -34,6 +34,8 @@ class Spider(ABC):
         if filter and not isinstance(filter, CrawledFilter):
             raise TypeError("crawled_filter must be a CrawledFilter, got a {}".format(filter.__class__.__name__))
         self._crawled_filter = filter
+        for request in self.start_targets:  # 则需将初始 requests 放入其中
+            self._crawled_filter.add(request)
 
     @property
     def filter(self): return self._filter
