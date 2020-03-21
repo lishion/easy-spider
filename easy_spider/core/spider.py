@@ -24,6 +24,9 @@ class Spider(ABC):
     @start_targets.setter
     def start_targets(self, targets):
         self._start_targets = self.from_url_iter(targets)
+        self._crawled_filter.clear()  # 首先清空 _crawled_filter 避免重复调用导致重复设置
+        for request in self.start_targets:  # 则需将初始 requests 放入 crawled_filer
+            self._crawled_filter.contains(request) or self._crawled_filter.add(request)
 
     @property
     def crawled_filter(self):
@@ -34,8 +37,8 @@ class Spider(ABC):
         if filter and not isinstance(filter, CrawledFilter):
             raise TypeError("crawled_filter must be a CrawledFilter, got a {}".format(filter.__class__.__name__))
         self._crawled_filter = filter
-        for request in self.start_targets:  # 则需将初始 requests 放入其中
-            self._crawled_filter.add(request)
+        for request in self.start_targets:  # 用户更改默认 crawled_filer, 需将初始 requests 放入其中
+            self._crawled_filter.contains(request) or self._crawled_filter.add(request)
 
     @property
     def filter(self): return self._filter
