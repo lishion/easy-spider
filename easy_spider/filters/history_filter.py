@@ -27,11 +27,16 @@ class CrawledFilter(DependenceFilter, ABC):
         history_filter_accept and self.add(request)  # 如果不存在于布隆过滤器中，则记录
         return history_filter_accept
 
+    @abstractmethod
+    def clear(self): pass
+
 
 class BloomFilter(CrawledFilter):
 
     def __init__(self, max_elements, error_rate):
         super().__init__()
+        self._max_elements = max_elements
+        self._error_rate = error_rate
         self._history_filter = _BloomFilter(max_elements, error_rate)
 
     def contains(self, request: Request):
@@ -39,6 +44,9 @@ class BloomFilter(CrawledFilter):
 
     def add(self, request: Request):
         self._history_filter.add(request.url)
+
+    def clear(self):
+        self._history_filter = _BloomFilter(self._max_elements, self._error_rate)
 
 
 class HashFilter(CrawledFilter):
@@ -52,3 +60,6 @@ class HashFilter(CrawledFilter):
 
     def add(self, request: Request):
         self._crawled_urls.add(request.url)
+
+    def clear(self):
+        self._crawled_urls.clear()
