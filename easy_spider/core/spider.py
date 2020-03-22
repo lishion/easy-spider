@@ -2,10 +2,12 @@ from easy_spider.network.request import Request
 from easy_spider.network.client import AsyncClient
 from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
+from easy_spider.core.recoverable import FileBasedRecoverable
 from easy_spider import tool
 from abc import ABC, abstractmethod
 from easy_spider.filters.build_in import Filter, html_filter, all_pass_filter, HashFilter, CrawledFilter
 from typing import Iterable
+from os.path import join
 
 
 class Spider(ABC):
@@ -23,7 +25,7 @@ class Spider(ABC):
 
     @start_targets.setter
     def start_targets(self, targets):
-        self._start_targets = self.from_url_iter(targets)
+        self._start_targets = list(self.from_url_iter(targets))
         self._crawled_filter.clear()  # 首先清空 _crawled_filter 避免重复调用导致重复设置
         for request in self.start_targets:  # 则需将初始 requests 放入 crawled_filer
             self._crawled_filter.contains(request) or self._crawled_filter.add(request)
@@ -135,3 +137,14 @@ class AsyncSpider(Spider, AsyncClient):
             return self._nothing()
         new_requests = self._process_request_after_handler(request_like_iter, request)
         return filter(self._get_whole_filter().accept, new_requests)
+
+
+class RecoverableSpider(AsyncSpider, FileBasedRecoverable, ABC):
+
+    def __init__(self):
+        AsyncSpider.__init__(self)
+        FileBasedRecoverable.__init__(self)
+        self.name = None
+
+    def stash_attr_names(self):
+        return ["_crawled_filter"]

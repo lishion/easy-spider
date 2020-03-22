@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from queue import Queue, Empty
 from collections import deque
+from easy_spider.core.recoverable import FileBasedRecoverable
 
 
 class Request(ABC):
@@ -62,6 +63,9 @@ class RequestQueue(ABC):
     @abstractmethod
     def empty(self) -> bool: pass
 
+    @abstractmethod
+    def head(self) -> Request: pass
+
 
 class SyncRequestQueue(RequestQueue):
 
@@ -90,6 +94,12 @@ class SimpleRequestQueue(RequestQueue):
     def __init__(self):
         self._queue = deque()
 
+    def head(self) -> Request:
+        try:
+            return self._queue[0]
+        except IndexError:
+            return None
+
     def put(self, request: Request) -> None:
         self._queue.append(request)
 
@@ -99,8 +109,22 @@ class SimpleRequestQueue(RequestQueue):
         except IndexError:
             return None
 
+    def clear(self):
+        self._queue = deque()
+
     def empty(self) -> bool:
         return len(self) == 0
 
     def __len__(self):
         return len(self._queue)
+
+
+class RecoverableRequestQueue(SimpleRequestQueue, FileBasedRecoverable, ABC):
+
+    def __init__(self):
+        SimpleRequestQueue.__init__(self)
+        FileBasedRecoverable.__init__(self)
+
+    def stash_attr_names(self):
+        return ["_queue"]
+
