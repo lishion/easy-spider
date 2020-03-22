@@ -1,8 +1,12 @@
-from easy_spider.core.spider import AsyncSpider
+from easy_spider.core.spider import AsyncSpider, RecoverableSpider
+from easy_spider.core.recoverable import Recoverable
 from easy_spider.log import console_logger, file_logger
-from easy_spider.network.request import RequestQueue, SimpleRequestQueue
+from easy_spider.network.request import RequestQueue, SimpleRequestQueue, RecoverableRequestQueue
 import asyncio
 from abc import ABC, abstractmethod
+from easy_spider.tool import pickle_load, pickle_dump, EXE_PATH
+from os.path import join, exists
+import json
 
 
 class Task(ABC):
@@ -21,6 +25,9 @@ class AbstractTask(Task, ABC):
         if not self._spider.start_targets:
             raise ValueError("初始请求不能为空")
         self._request_queue.put_many(self._spider.start_targets)
+
+    @property
+    def spider(self): return self._spider
 
 
 # class MultiThreadJob(AbstractTask):
@@ -58,8 +65,8 @@ class AbstractTask(Task, ABC):
 class AsyncTask(AbstractTask):
     def __init__(self, spider: AsyncSpider, request_queue=SimpleRequestQueue()):
         super().__init__(spider, request_queue)
-        self._num_running_task = 0
         self._init_queue()
+        self._progress_requests = []  # 正在处理中的请求
 
     async def run(self):
         await asyncio.gather(*[self._run() for _ in range(self._spider.num_threads)])
@@ -68,13 +75,14 @@ class AsyncTask(AbstractTask):
         while True:
             request = self._request_queue.get()
             if request is None:
-                if self._num_running_task != 0:
+                if self._progress_requests:  # 队列中没有 request, 如果有正在处理中的 request 则等待
                     await asyncio.sleep(0)
                     continue
-                else:  # 如果 task_queue 为空, 且同时正在进行的任务为 0 则退出
+                else:  # 否则表示没有任务完成，退出
                     break
+            else:
+                self._progress_requests.append(request)  # 暂存正在处理的 request
             try:
-                self._num_running_task += 1
                 new_requests = await self._spider.crawl(request)
                 self._request_queue.put_many(new_requests)
                 console_logger.info("成功 {} ".format(request))
@@ -82,4 +90,30 @@ class AsyncTask(AbstractTask):
                 console_logger.warning("失败 %s  原因 %s", request, e)
                 file_logger.warning("失败 %s", request, exc_info=True)
             finally:
-                self._num_running_task -= 1
+                self._progress_requests.remove(request)
+
+
+class RecoverableTask(AsyncTask, Recoverable):
+
+    def __init__(self, spider: RecoverableSpider, request_queue=RecoverableRequestQueue()):
+        super().__init__(spider, request_queue)
+        self._recover_items = (spider, request_queue)
+
+    def can_recover(self, resource):
+        if not exists(resource):
+            return False
+        for item in self._recover_items:
+            if not item.can_recover(resource):
+                raise FileNotFoundError("can't recover {}, the file is missing".format(item.recover_name()))
+        return True
+
+    def stash(self, resource):
+        self._request_queue.put_many(self._progress_requests)  # 需要将所有未被处理的 request 重新放入队列
+        for recover_item in self._recover_items:
+            recover_item.stash(resource)
+
+    def recover(self, resource):
+        if not self.can_recover(resource):
+            raise ValueError("{} not exist".format(join(EXE_PATH, resource)))
+        for recover_item in self._recover_items:
+            recover_item.recover(resource)
