@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Optional
 
 
-class ExceptionFormatter:
+class ErrorFormatter:
     def __init__(self, default_formatter):
         self._default_formatter = default_formatter
         self._formatters = {}
@@ -13,42 +13,38 @@ class ExceptionFormatter:
         self._formatters[exception_cls] = formatter
 
     def format(self, exception):
-        formatter = self._formatters.get(exception.__type__, self._default_formatter)
-        return formatter(exception)
+        formatter = self._formatters.get(exception.__class__, self._default_formatter)
+        return formatter.format(exception)
 
 
 class Formatter(ABC):
 
     @abstractmethod
-    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception], int]: pass
-
-    @staticmethod
-    def _no_code_exception(exception_type, detail):
-        return exception_type, detail, -1
+    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception]]: pass
 
     def format(self, exception):
-        exception_type, detail, code = self._get_formatter_items(exception)
-        if not str(detail):
-            detail = "{}.{}".format(detail.__module__, detail.__class__.__name__)
-        if code == -1:
-            return "{} -> {}".format(exception_type, detail)
+        exception_type, cause = self._get_formatter_items(exception)
+        if not str(cause):  # 如果 cause 为空，则将异常类的名字作为 cause
+            cause = "{}.{}".format(cause.__module__, cause.__class__.__name__)
+        if not hasattr(exception, "code"):
+            return "{} -> {}".format(exception_type, cause)
         else:
-            return "{} -> {} code: {}".format(exception_type, detail, code)
+            return "{} -> {} code: {}".format(exception_type, cause, exception.code)
 
 
 class DefaultErrorFormatter(Formatter):
 
-    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception], int]:
+    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception]]:
         if isinstance(exception, KnownError):
-            return self._no_code_exception(exception.error_type, exception.__cause__)
+            return exception.error_type, exception.__cause__
         else:
-            return self._no_code_exception("运行时错误", exception)
+            return "运行时错误", exception
 
 
 class ClientErrorFormatter(DefaultErrorFormatter):
 
-    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception], int]:
+    def _get_formatter_items(self, exception) -> Tuple[str, Optional[Exception]]:
         if exception.__cause__.__class__ == TimeoutError:
-            return self._no_code_exception(exception.error_type, "连接超时")
+            return exception.error_type, Exception("连接超时")
         else:
             return super()._get_formatter_items(exception)

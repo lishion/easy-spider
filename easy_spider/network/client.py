@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from easy_spider.network.request import Request
 from easy_spider.network.response import (Response, TextResponse, HTMLResponse)
+from easy_spider.error.error_handler import client_error
+from easy_spider.error.known_error import ResponseError
 from aiohttp import ClientSession, ClientTimeout
 
 
@@ -23,16 +25,6 @@ class Client(ABC):
             response = Response(*args)
         response.request = request
         return response
-
-
-class SimpleClient(Client):
-    pass
-    # def __init__(self, session):
-    #     self._session: Session = session
-    #
-    # def do_request(self, resource: Request) -> Response:
-    #     raw_response = self._session.get(resource.uri)
-    #     return self.to_response(raw_response.content, raw_response.url, raw_response.headers)
 
 
 class AsyncClient(Client):
@@ -58,6 +50,11 @@ class AsyncClient(Client):
             common_params["json"] = request.data_format
         else:
             raise ValueError("未知数据类型 {} ，仅支持 json 或 form")
-        raw_response = await self._session.request(request.method, request.url, **common_params)
-        content = await raw_response.content.read()
+        try:
+            raw_response = await self._session.request(request.method, request.url, **common_params)
+            content = await raw_response.content.read()
+        except Exception as e:
+            raise client_error(e) from e
+        if raw_response.status >= 400:
+            raise ResponseError(raw_response.status) from None
         return self.to_response(request, content, str(raw_response.url), raw_response.headers)

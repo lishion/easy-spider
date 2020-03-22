@@ -3,6 +3,7 @@ from easy_spider.network.client import AsyncClient
 from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
 from easy_spider.core.recoverable import FileBasedRecoverable
+from easy_spider.error.error_handler import forward, handler_error
 from easy_spider import tool
 from abc import ABC, abstractmethod
 from easy_spider.filters.build_in import Filter, html_filter, all_pass_filter, HashFilter, CrawledFilter
@@ -131,7 +132,7 @@ class AsyncSpider(Spider, AsyncClient):
         爬虫主要逻辑
         """
         response = await self.do_request(request)
-        handler = request.handler or self.handle
+        handler = forward(to=handler_error)(request.handler or self.handle)  # 包装错误处理
         request_like_iter = handler(response)
         if not request_like_iter:
             return self._nothing()

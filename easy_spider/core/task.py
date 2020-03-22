@@ -2,6 +2,8 @@ from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.core.recoverable import Recoverable
 from easy_spider.log import console_logger, file_logger
 from easy_spider.network.request import RequestQueue, SimpleRequestQueue, RecoverableRequestQueue
+from easy_spider.error.known_error import ClientError
+from easy_spider.error.error_formatter import ErrorFormatter, DefaultErrorFormatter, ClientErrorFormatter
 import asyncio
 from abc import ABC, abstractmethod
 from easy_spider.tool import pickle_load, pickle_dump, EXE_PATH
@@ -67,6 +69,8 @@ class AsyncTask(AbstractTask):
         super().__init__(spider, request_queue)
         self._init_queue()
         self._progress_requests = []  # 正在处理中的请求
+        self._error_formatter = ErrorFormatter(DefaultErrorFormatter())
+        self._error_formatter.register(ClientError, ClientErrorFormatter())
 
     async def run(self):
         await asyncio.gather(*[self._run() for _ in range(self._spider.num_threads)])
@@ -87,7 +91,7 @@ class AsyncTask(AbstractTask):
                 self._request_queue.put_many(new_requests)
                 console_logger.info("成功 {} ".format(request))
             except Exception as e:
-                console_logger.warning("失败 %s  原因 %s", request, e)
+                console_logger.warning("失败 %s %s", request, self._error_formatter.format(e))
                 file_logger.warning("失败 %s", request, exc_info=True)
             finally:
                 self._progress_requests.remove(request)
