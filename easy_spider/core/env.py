@@ -25,9 +25,10 @@ class AsyncSpiderEvn:
 
     @staticmethod
     def _when_interrupt(_, __, task):
-        prompt_content = "[*] You entered Ctrl + C, would you like stop spider (y/n): "
-        if input(prompt_content).lower() != "y":
+        if input("[*] You entered Ctrl + C, would you like stop spider (y/n): ").lower() != "y":
             return
+        if input("[*] Would you like stash your spider task (y/n): ").lower() != "y":
+            exit()
         spider_name = task.spider.name
         stash_path = join(EXE_PATH, "." + spider_name)
         if task.can_recover(stash_path):
@@ -37,7 +38,7 @@ class AsyncSpiderEvn:
             if override.lower() != "y":
                 exit()
         else:
-            console_logger.info("[*] Create stash dir `{}`".format(stash_path))
+            print("[*] Create stash dir `{}`".format(stash_path))
             makedirs(stash_path)
         print("[*] Start stash for spider `{}`".format(task.spider.name))
         task.stash(stash_path)
