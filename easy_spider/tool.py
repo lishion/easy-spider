@@ -2,6 +2,7 @@ import posixpath
 from typing import Any
 from os import path
 import sys
+import pickle
 
 
 def get_extension(url):
@@ -20,6 +21,16 @@ def copy_attr(attr, _from, _to):
 
 def get_abs_path(file_path):
     return path.dirname(path.abspath(file_path))
+
+
+def pickle_dump(obj, file_uri):
+    with open(file_uri, 'wb') as wd:
+        pickle.dump(obj, wd)
+
+
+def pickle_load(file_uri):
+    with open(file_uri, 'rb') as rd:
+        return pickle.load(rd)
 
 
 ABS_PATH = get_abs_path(__file__)
