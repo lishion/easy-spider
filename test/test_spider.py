@@ -1,11 +1,25 @@
 import unittest
-from easy_spider.core.spider import AsyncSpider
+from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.filters.build_in import BloomFilter, all_pass_filter
 from easy_spider.network.request import Request
 from test.mock_env import run_and_get_result, env
+from easy_spider.tool import EXE_PATH
+from os.path import join
 
 
 class MySpider(AsyncSpider):
+
+    def __init__(self):
+        super().__init__()
+        self.start_targets = ["http://localhost:5000/test_extract"]
+        self.num_threads = 4
+
+    def handle(self, response):
+        print(response.bs.title)
+        yield from super().handle(response)
+
+
+class RecoverMySpider(RecoverableSpider):
 
     def __init__(self):
         super().__init__()
@@ -38,6 +52,15 @@ class TestSpider(unittest.TestCase):
         spider.crawled_filter.pre_filter = all_pass_filter
         start_request = Request.of("http://localhost:5000/test_extract")
         self.assertFalse(spider.crawled_filter.accept(start_request))
+
+    def test_recover(self):
+        spider = RecoverMySpider()
+        spider.start_targets = ["http://www.test1.com"]
+        spider.stash(EXE_PATH)
+        del spider
+        recovered_spider = RecoverMySpider()
+        recovered_spider.recover(EXE_PATH)
+        self.assertTrue(recovered_spider.crawled_filter.contains(Request.of("http://www.test1.com")))
 
 
 if __name__ == '__main__':

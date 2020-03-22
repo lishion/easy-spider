@@ -1,9 +1,11 @@
 import unittest
 from test.tools import test_page
 from aioresponses import CallbackResult
-from easy_spider.network.request import Request
+from easy_spider.network.request import Request, RecoverableRequestQueue
+from easy_spider.tool import EXE_PATH
 import re
 from test.mock_env import env, get
+from os.path import join
 
 
 class TestNetWork(unittest.TestCase):
@@ -92,6 +94,23 @@ class TestNetWork(unittest.TestCase):
         self.assertIs(r1, r)
         with self.assertRaises(TypeError):
             Request.of(1)
+
+    def test_recover_queue(self):
+        queue = RecoverableRequestQueue()
+        queue.put(Request.of("1"))
+        queue.put(Request.of("2"))
+        queue.put(Request.of("3"))
+        queue.stash(EXE_PATH)
+        del queue
+
+        recovered_queue = RecoverableRequestQueue()
+        recovered_queue.recover(EXE_PATH)
+        self.assertFalse(recovered_queue.empty())
+        i = 1
+        while not recovered_queue.empty():
+            request = recovered_queue.get()
+            self.assertEqual(request.url, str(i))
+            i += 1
 
 
 if __name__ == '__main__':
