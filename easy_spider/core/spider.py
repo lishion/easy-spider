@@ -2,7 +2,7 @@ from easy_spider.network.request import Request
 from easy_spider.network.client import AsyncClient
 from easy_spider.network.response import Response, HTMLResponse
 from easy_spider.extractors.extractor import SimpleBSExtractor
-from easy_spider.core.recoverable import FileBasedRecoverable
+from easy_spider.core.recoverable import Recoverable
 from easy_spider.error.error_handler import forward, handler_error
 from easy_spider import tool
 from abc import ABC, abstractmethod
@@ -140,12 +140,17 @@ class AsyncSpider(Spider, AsyncClient):
         return filter(self._get_whole_filter().accept, new_requests)
 
 
-class RecoverableSpider(AsyncSpider, FileBasedRecoverable, ABC):
+class RecoverableSpider(AsyncSpider, Recoverable, ABC):
 
     def __init__(self):
-        AsyncSpider.__init__(self)
-        FileBasedRecoverable.__init__(self)
+        super().__init__()
         self.name = None
 
-    def stash_attr_names(self):
-        return ["_crawled_filter"]
+    def stash(self, resource):
+        self._crawled_filter.stash(resource)
+
+    def recover(self, resource):
+        self._crawled_filter.recover(resource)
+
+    def can_recover(self, resource):
+        return self._crawled_filter.can_recover(resource)
