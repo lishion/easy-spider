@@ -221,7 +221,10 @@ class RecoverableSpillRequestQueueProxy(SpillRequestQueueProxy, FileBasedRecover
                 requests.append(self._queue.get())
             while requests:
                 self.put(requests.pop())
-        super().recover(resource)
+        try:
+            super().recover(resource)
+        except:
+            pass
 
     def can_recover(self, resource):
         return self._queue.can_recover(resource)
