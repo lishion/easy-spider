@@ -1,7 +1,7 @@
 import unittest
 from test.tools import test_page
 from aioresponses import CallbackResult
-from easy_spider.network.request import Request, RecoverableRequestQueue
+from easy_spider.network.request import Request, RecoverableRequestQueue, SpillRequestQueueProxy, RecoverableSpillRequestQueueProxy
 from easy_spider.tool import EXE_PATH
 import re
 from test.mock_env import env, get
@@ -111,6 +111,31 @@ class TestNetWork(unittest.TestCase):
             request = recovered_queue.get()
             self.assertEqual(request.url, str(i))
             i += 1
+
+    def test_spill_queue(self):
+        # queue = RecoverableRequestQueue()
+        # queue_proxy = SpillRequestQueueProxy(queue, 10)
+        numbers = list(range(52))
+        # queue_proxy.put_many(numbers)
+        # others = []
+        # self.assertEqual(len(queue_proxy), 52)
+        # while not queue_proxy.empty():
+        #     others.append(queue_proxy.get())
+        # self.assertEqual(numbers, others)
+
+        queue = RecoverableRequestQueue()
+        queue_proxy = RecoverableSpillRequestQueueProxy(queue, 10)
+        queue_proxy.put_many(numbers)
+        queue_proxy.stash(EXE_PATH)
+        del queue_proxy
+
+        stashed_queue_proxy = RecoverableSpillRequestQueueProxy(queue, 10)
+        stashed_queue_proxy.recover(EXE_PATH)
+        others = []
+        self.assertEqual(len(stashed_queue_proxy), 52)
+        while not stashed_queue_proxy.empty():
+            others.append(stashed_queue_proxy.get())
+        self.assertEqual(numbers, others)
 
 
 if __name__ == '__main__':

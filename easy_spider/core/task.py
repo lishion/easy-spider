@@ -1,7 +1,8 @@
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.core.recoverable import Recoverable
 from easy_spider.log import console_logger, file_logger
-from easy_spider.network.request import RequestQueue, SimpleRequestQueue, RecoverableRequestQueue
+from easy_spider.network.request import RequestQueue, SimpleRequestQueue, RecoverableRequestQueue, \
+    RecoverableSpillRequestQueueProxy
 from easy_spider.error.known_error import ClientError
 from easy_spider.error.error_formatter import ErrorFormatter, DefaultErrorFormatter, ClientErrorFormatter
 import asyncio
@@ -75,15 +76,20 @@ class AsyncTask(AbstractTask):
     async def run(self):
         await asyncio.gather(*[self._run() for _ in range(self._spider.num_threads)])
 
+    async def wait_request(self):
+        request = self._request_queue.get()
+        if request is None:
+            if self._progress_requests:  # 队列中没有 request, 如果有正在处理中的 request 则等待
+                await asyncio.sleep(0.1)
+            else:
+                return None
+        return request
+
     async def _run(self):
         while True:
-            request = self._request_queue.get()
-            if request is None:
-                if self._progress_requests:  # 队列中没有 request, 如果有正在处理中的 request 则等待
-                    await asyncio.sleep(0)
-                    continue
-                else:  # 否则表示没有任务完成，退出
-                    break
+            request = await self.wait_request()
+            if request is None:  # 如果不存在任何 request 则退出
+                break
             else:
                 self._progress_requests.append(request)  # 暂存正在处理的 request
             try:
@@ -99,7 +105,8 @@ class AsyncTask(AbstractTask):
 
 class RecoverableTask(AsyncTask, Recoverable):
 
-    def __init__(self, spider: RecoverableSpider, request_queue=RecoverableRequestQueue()):
+    def __init__(self, spider: RecoverableSpider,
+                 request_queue=RecoverableSpillRequestQueueProxy(RecoverableRequestQueue())):
         super().__init__(spider, request_queue)
         self._recover_items = (spider, request_queue)
 

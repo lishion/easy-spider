@@ -1,8 +1,10 @@
 import posixpath
 from typing import Any
-from os import path
+from os import path, remove
 import sys
 import pickle
+from uuid import uuid1
+from datetime import datetime
 
 
 def get_extension(url):
@@ -33,7 +35,23 @@ def pickle_load(file_uri):
         return pickle.load(rd)
 
 
+def uuid():
+    return str(uuid1())
+
+
+def formatted_datetime(fmt=None):
+    return datetime.utcnow().strftime(fmt or '%Y-%m-%d %H:%M:%S.%f')
+
+
+def delete_file(uri):
+    try:
+        remove(uri)
+    except IOError as e:
+        # console_logger.warning("delete spill file %s error" % uri)
+        # file_logger.warning("delete spill file %s error" % uri, exc_info=True)
+        pass
+
+
 ABS_PATH = get_abs_path(__file__)
 sys.path.append(path.join(ABS_PATH, ".."))
-
 EXE_PATH = path.dirname(path.abspath(__name__))
