@@ -70,6 +70,8 @@ class RequestQueue(ABC):
     @abstractmethod
     def __len__(self): pass
 
+    def __bool__(self): return True
+
 
 # class SyncRequestQueue(RequestQueue):
 #
