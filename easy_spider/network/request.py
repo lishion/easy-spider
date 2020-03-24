@@ -146,7 +146,6 @@ class SpillRequestQueueProxy(RequestQueue):
         self._spill_path = join(EXE_PATH, self._spill_dir_name)
         self._wait_spill = []
         self._spilled_files = []
-        exists(self._spill_path) or makedirs(self._spill_path)
 
     def empty(self) -> bool:
         return len(self) == 0
@@ -160,6 +159,7 @@ class SpillRequestQueueProxy(RequestQueue):
         """
         if len(self._wait_spill) == self._num_of_spill:
             spill_filename = uuid()
+            exists(self._spill_path) or makedirs(self._spill_path)
             pickle_dump(self._wait_spill, self._join(spill_filename))
             self._spilled_files.append(spill_filename)
             self._wait_spill.clear()
