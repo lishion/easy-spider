@@ -4,5 +4,5 @@ from easy_spider.network.request import Request
 from easy_spider.network.response import Response, HTMLResponse, TextResponse
 from easy_spider.filters.build_in import *
 
-__version__ = "1.0.11"
+__version__ = "1.0.12"
 name = "easy_spider"

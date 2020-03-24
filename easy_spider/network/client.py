@@ -47,7 +47,7 @@ class AsyncClient(Client):
         if data_format == "form":
             common_params["data"] = request.data
         elif data_format == "json":
-            common_params["json"] = request.data_format
+            common_params["json"] = request.data
         else:
             raise ValueError("未知数据类型 {} ，仅支持 json 或 form")
         try:
