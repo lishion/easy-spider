@@ -16,6 +16,7 @@ class Spider(ABC):
     def __init__(self):
         self._start_targets = []
         self.num_threads = 1
+        self.num_of_spill = 10000
         self._filter = html_filter
         self.extractor = SimpleBSExtractor()
         self._crawled_filter = HashFilter()

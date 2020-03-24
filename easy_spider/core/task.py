@@ -1,15 +1,14 @@
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.core.recoverable import Recoverable
 from easy_spider.log import console_logger, file_logger
-from easy_spider.network.request import RequestQueue, SimpleRequestQueue, RecoverableRequestQueue, \
-    RecoverableSpillRequestQueueProxy
+from easy_spider.network.request import RequestQueue
+from easy_spider.core.queue import get_queue_for_spider
 from easy_spider.error.known_error import ClientError
 from easy_spider.error.error_formatter import ErrorFormatter, DefaultErrorFormatter, ClientErrorFormatter
 import asyncio
 from abc import ABC, abstractmethod
-from easy_spider.tool import pickle_load, pickle_dump, EXE_PATH
+from easy_spider.tool import EXE_PATH
 from os.path import join, exists
-import json
 
 
 class Task(ABC):
@@ -66,7 +65,8 @@ class AbstractTask(Task, ABC):
 
 
 class AsyncTask(AbstractTask):
-    def __init__(self, spider: AsyncSpider, request_queue=SimpleRequestQueue()):
+    def __init__(self, spider: AsyncSpider, request_queue=None):
+        request_queue = request_queue or get_queue_for_spider(spider)
         super().__init__(spider, request_queue)
         self._init_queue()
         self._progress_requests = []  # 正在处理中的请求
@@ -105,8 +105,8 @@ class AsyncTask(AbstractTask):
 
 class RecoverableTask(AsyncTask, Recoverable):
 
-    def __init__(self, spider: RecoverableSpider,
-                 request_queue=RecoverableSpillRequestQueueProxy(RecoverableRequestQueue())):
+    def __init__(self, spider: RecoverableSpider, request_queue=None):
+        request_queue = request_queue or get_queue_for_spider(spider)
         super().__init__(spider, request_queue)
         self._recover_items = (spider, request_queue)
 

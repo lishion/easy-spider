@@ -1,11 +1,24 @@
 import unittest
 from test.tools import test_page
 from aioresponses import CallbackResult
-from easy_spider.network.request import Request, RecoverableRequestQueue, SpillRequestQueueProxy, RecoverableSpillRequestQueueProxy
+from easy_spider.network.request import Request, RecoverableRequestQueue, \
+    SpillRequestQueueProxy, RecoverableSpillRequestQueueProxy, SimpleRequestQueue
+from easy_spider.core.queue import get_queue_for_spider
+from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.tool import EXE_PATH
 import re
 from test.mock_env import env, get
 from os.path import join
+
+
+class ASpider(AsyncSpider):
+    def handle(self, response):
+        pass
+
+
+class RSpider(RecoverableSpider):
+    def handle(self, response):
+        pass
 
 
 class TestNetWork(unittest.TestCase):
@@ -136,6 +149,20 @@ class TestNetWork(unittest.TestCase):
         while not stashed_queue_proxy.empty():
             others.append(stashed_queue_proxy.get())
         self.assertEqual(numbers, others)
+
+    def test_get_queue(self):
+        aspider = ASpider()
+        rspider = RSpider()
+        aspider.num_of_spill = 0
+        rspider.num_of_spill = 0
+        self.assertEqual(get_queue_for_spider(aspider).__class__, SimpleRequestQueue)
+        self.assertEqual(get_queue_for_spider(rspider).__class__, RecoverableRequestQueue)
+        aspider.num_of_spill = 10000
+        rspider.num_of_spill = 10000
+        self.assertEqual(get_queue_for_spider(aspider).__class__, SpillRequestQueueProxy)
+        self.assertEqual(get_queue_for_spider(rspider).__class__, RecoverableSpillRequestQueueProxy)
+        with self.assertRaises(TypeError):
+            get_queue_for_spider(1)
 
 
 if __name__ == '__main__':
