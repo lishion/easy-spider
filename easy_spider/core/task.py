@@ -65,6 +65,7 @@ class AbstractTask(Task, ABC):
 
 
 class AsyncTask(AbstractTask):
+
     def __init__(self, spider: AsyncSpider, request_queue=None):
         request_queue = request_queue or get_queue_for_spider(spider)
         super().__init__(spider, request_queue)
@@ -76,31 +77,34 @@ class AsyncTask(AbstractTask):
     async def run(self):
         await asyncio.gather(*[self._run() for _ in range(self._spider.num_threads)])
 
-    async def wait_request(self):
-        request = self._request_queue.get()
-        if request is None:
-            if self._progress_requests:  # 队列中没有 request, 如果有正在处理中的 request 则等待
-                await asyncio.sleep(0.1)
-            else:
-                return None
-        return request
+    async def _wait_request(self):
+        while True:
+            request = self._request_queue.get()
+            # 当队列中没有 request 且正在处理的 request 不为空，则有可能会有新的request，因此应该等待
+            # 否则直接返回 None 表示不会再有新的 request 产生
+            if request is None and self._progress_requests:
+                await asyncio.sleep(1)
+                continue
+            return request
+
+    async def _crawl_request(self, request):
+        try:
+            new_requests = await self._spider.crawl(request)
+            self._request_queue.put_many(new_requests)
+            console_logger.info("成功 {} ".format(request))
+        except Exception as e:
+            console_logger.warning("失败 %s %s", request, self._error_formatter.format(e))
+            file_logger.warning("失败 %s", request, exc_info=True)
 
     async def _run(self):
         while True:
-            request = await self.wait_request()
-            if request is None:  # 如果不存在任何 request 则退出
+            request = await self._wait_request()
+            if not request:
                 break
-            else:
-                self._progress_requests.append(request)  # 暂存正在处理的 request
-            try:
-                new_requests = await self._spider.crawl(request)
-                self._request_queue.put_many(new_requests)
-                console_logger.info("成功 {} ".format(request))
-            except Exception as e:
-                console_logger.warning("失败 %s %s", request, self._error_formatter.format(e))
-                file_logger.warning("失败 %s", request, exc_info=True)
-            finally:
-                self._progress_requests.remove(request)
+            self._progress_requests.append(request)
+            await self._crawl_request(request)
+            self._progress_requests.remove(request)
+        console_logger.info("协程已退出")
 
 
 class RecoverableTask(AsyncTask, Recoverable):

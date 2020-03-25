@@ -52,6 +52,10 @@ def delete_file(uri):
         pass
 
 
+def get_type_name(instance):
+    return instance.__class__.__name__
+
+
 ABS_PATH = get_abs_path(__file__)
 sys.path.append(path.join(ABS_PATH, ".."))
 EXE_PATH = path.dirname(path.abspath(__name__))
