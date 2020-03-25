@@ -1,9 +1,9 @@
 import unittest
 from test.tools import test_page
 from aioresponses import CallbackResult
-from easy_spider.network.request import Request, RecoverableRequestQueue, \
-    SpillRequestQueueProxy, RecoverableSpillRequestQueueProxy, SimpleRequestQueue
-from easy_spider.core.queue import get_queue_for_spider
+from easy_spider.core.queue import RecoverableRequestQueue, \
+    SpillRequestQueueProxy, RecoverableSpillRequestQueueProxy, SimpleRequestQueue, get_queue_for_spider
+from easy_spider.network.request import Request
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.tool import EXE_PATH
 import re

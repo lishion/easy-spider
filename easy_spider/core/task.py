@@ -1,8 +1,7 @@
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.core.recoverable import Recoverable
 from easy_spider.log import console_logger, file_logger
-from easy_spider.network.request import RequestQueue
-from easy_spider.core.queue import get_queue_for_spider
+from easy_spider.core.queue import get_queue_for_spider, RequestQueue
 from easy_spider.error.known_error import ClientError
 from easy_spider.error.error_formatter import ErrorFormatter, DefaultErrorFormatter, ClientErrorFormatter
 import asyncio
@@ -66,7 +65,7 @@ class AbstractTask(Task, ABC):
 
 class AsyncTask(AbstractTask):
     def __init__(self, spider: AsyncSpider, request_queue=None):
-        request_queue = request_queue or get_queue_for_spider(spider)
+        request_queue = get_queue_for_spider(spider) if request_queue is None else request_queue
         super().__init__(spider, request_queue)
         self._init_queue()
         self._progress_requests = []  # 正在处理中的请求
@@ -90,9 +89,8 @@ class AsyncTask(AbstractTask):
             request = await self.wait_request()
             if request is None:  # 如果不存在任何 request 则退出
                 break
-            else:
-                self._progress_requests.append(request)  # 暂存正在处理的 request
             try:
+                self._progress_requests.append(request)  # 暂存正在处理的 request
                 new_requests = await self._spider.crawl(request)
                 self._request_queue.put_many(new_requests)
                 console_logger.info("成功 {} ".format(request))
@@ -106,9 +104,10 @@ class AsyncTask(AbstractTask):
 class RecoverableTask(AsyncTask, Recoverable):
 
     def __init__(self, spider: RecoverableSpider, request_queue=None):
-        request_queue = request_queue or get_queue_for_spider(spider)
+        # 不能改为 request_queue = request_queue or get_queue_for_spider(spider) !!!
+        request_queue = get_queue_for_spider(spider) if request_queue is None else request_queue
         super().__init__(spider, request_queue)
-        self._recover_items = (spider, request_queue)
+        self._recover_items = (self._spider, self._request_queue)
 
     def can_recover(self, resource):
         if not exists(resource):
