@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from os.path import exists, join
 from typing import List
-from easy_spider.tool import pickle_load, pickle_dump
+from easy_spider.tool import pickle_load, pickle_dump, get_type_name
 
 
 class Recoverable(ABC):
@@ -75,3 +75,23 @@ class FileBasedRecoverable(Recoverable, ABC):
 #     @abstractmethod
 #     def recover(self): pass
 
+
+class CountDown:
+    def __init__(self, start):
+        if start <= 0:
+            raise ValueError("start must > 1, get `{}`".format(start))
+        self._start = start
+        self._now = start
+        self._actions = []
+
+    def add_actions(self, action):
+        if not callable(action):
+            raise TypeError("action must be a callable, got `{}`".format(get_type_name(action)))
+        self._actions.append(action)
+
+    def count(self):
+        self._now -= 1
+        if self._now == 0:
+            for action in self._actions:
+                action()
+            self._now = self._start

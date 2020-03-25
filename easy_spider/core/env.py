@@ -1,5 +1,5 @@
 from easy_spider.network.client import AsyncClient
-from easy_spider.core.task import AsyncTask, RecoverableTask
+from easy_spider.core.task import AsyncTask, RecoverableTask, CountDownRecoverableTask
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.log import console_logger
 from easy_spider.tool import EXE_PATH
@@ -8,6 +8,7 @@ from asyncio import get_event_loop
 from cached_property import cached_property
 from os.path import join
 from os import makedirs
+from os.path import exists
 import signal
 
 
@@ -49,12 +50,18 @@ class AsyncSpiderEvn:
     def _recover_or_create(spider):
         if not hasattr(spider, "name") or not spider.name:
             raise ValueError("RecoverSpider must have property `name`")
-        task = RecoverableTask(spider)
         # 存储爬虫数据的文件夹为 EXE_PATH/.xxx, xxx=spider.name, EXE_PATH 为运行命令执行的文件夹
         stash_path = join(EXE_PATH, "." + spider.name)
+        if spider.auto_save_frequency != -1:
+            task = CountDownRecoverableTask(spider)
+            task.add_actions(lambda: task.stash(stash_path))  # 自动保存频率不为 1，则添加自动保存回调函数
+        else:
+            task = RecoverableTask(spider)
         if task.can_recover(stash_path):  # 如果能从文件中恢复则先进行恢复
             print("[*] recover from exist stash file")
             task.recover(stash_path)
+        else:
+            makedirs(stash_path)
         return task
 
     async def _run_spider(self, spider):
@@ -74,7 +81,9 @@ class AsyncSpiderEvn:
 
     @cached_property
     def loop(self):
-        return self._loop or get_event_loop()
+        if not self._loop:
+            self._loop = get_event_loop()
+        return self._loop
 
     def run(self, spider: AsyncSpider):
         self.loop.run_until_complete(self._run_spider(spider))
@@ -83,7 +92,7 @@ class AsyncSpiderEvn:
         self.__del__()
 
     def __del__(self):
-        if not self._loop or self.loop.is_closed():
+        if not self.loop or self.loop.is_closed():
             return
         self._session and self.loop.run_until_complete(self._session.close())
 

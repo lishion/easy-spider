@@ -11,7 +11,7 @@ from typing import List
 class Request(ABC):
     def __init__(self, url, handler=None, method='GET', priority=0, tag="any",
                  headers=None, cookies=None, timeout=None, params=None, data=None,
-                 data_format='form', encoding='utf-8', generation=0):
+                 data_format='form', encoding='utf-8', generation=0, proxy=None):
         self.url: str = url
         self._handler = handler
         self.priority: int = priority
@@ -24,6 +24,7 @@ class Request(ABC):
         self.params: dict = params or {}
         self.data: dict = data
         self.data_format: str = data_format
+        self.proxy: str = proxy
         self.generation = generation
 
     @property
