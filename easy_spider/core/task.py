@@ -9,6 +9,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from easy_spider.tool import EXE_PATH
 from os.path import join, exists
+from os import listdir
 from typing import List
 
 
@@ -120,7 +121,7 @@ class RecoverableTask(AsyncTask, FileBasedRecoverable):
         return ["_progress_requests"]
 
     def can_recover(self, resource):
-        if not exists(resource):
+        if not exists(resource) or not listdir(resource):
             return False
         for item in self._recover_items:
             if not item.can_recover(resource):

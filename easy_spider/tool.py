@@ -59,3 +59,7 @@ def get_type_name(instance):
 ABS_PATH = get_abs_path(__file__)
 sys.path.append(path.join(ABS_PATH, ".."))
 EXE_PATH = path.dirname(path.abspath(__name__))
+
+
+def work_path_join(arg, *args):
+    return path.join(EXE_PATH, '.easy-spider', arg, *args)

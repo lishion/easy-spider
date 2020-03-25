@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import deque
 from easy_spider.core.recoverable import FileBasedRecoverable
-from easy_spider.tool import EXE_PATH, uuid, pickle_load, pickle_dump, formatted_datetime, delete_file
+from easy_spider.tool import EXE_PATH, uuid, pickle_load, pickle_dump, formatted_datetime, delete_file, work_path_join
 from os.path import join, exists
 from os import makedirs
 from easy_spider.log import console_logger
@@ -146,7 +146,7 @@ class SpillRequestQueueProxy(RequestQueue):
         self._queue = queue
         self._num_of_spill = num_of_spill
         self._spill_dir_name = '.spill-{}-{}'.format(formatted_datetime('%Y-%m-%d-%H-%M-%S-%f'), uuid())
-        self._spill_path = join(EXE_PATH, self._spill_dir_name)
+        self._spill_path = work_path_join(self._spill_dir_name)
         self._wait_spill = []
         self._spilled_files = []
 
