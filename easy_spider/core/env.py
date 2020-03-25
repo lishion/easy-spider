@@ -74,7 +74,9 @@ class AsyncSpiderEvn:
 
     @cached_property
     def loop(self):
-        return self._loop or get_event_loop()
+        if not self._loop:
+            self._loop = get_event_loop()
+        return self._loop
 
     def run(self, spider: AsyncSpider):
         self.loop.run_until_complete(self._run_spider(spider))
@@ -83,7 +85,7 @@ class AsyncSpiderEvn:
         self.__del__()
 
     def __del__(self):
-        if not self._loop or self.loop.is_closed():
+        if not self.loop or self.loop.is_closed():
             return
         self._session and self.loop.run_until_complete(self._session.close())
 
