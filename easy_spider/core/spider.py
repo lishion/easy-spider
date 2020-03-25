@@ -146,6 +146,7 @@ class RecoverableSpider(AsyncSpider, Recoverable, ABC):
     def __init__(self):
         super().__init__()
         self.name = None
+        self.auto_save_frequency = 1000
 
     def stash(self, resource):
         self._crawled_filter.stash(resource)

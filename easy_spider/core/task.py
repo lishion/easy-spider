@@ -1,5 +1,5 @@
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
-from easy_spider.core.recoverable import Recoverable
+from easy_spider.core.recoverable import Recoverable, CountDown, FileBasedRecoverable
 from easy_spider.log import console_logger, file_logger
 from easy_spider.network.request import RequestQueue
 from easy_spider.core.queue import get_queue_for_spider
@@ -9,6 +9,7 @@ import asyncio
 from abc import ABC, abstractmethod
 from easy_spider.tool import EXE_PATH
 from os.path import join, exists
+from typing import List
 
 
 class Task(ABC):
@@ -88,6 +89,7 @@ class AsyncTask(AbstractTask):
             return request
 
     async def _crawl_request(self, request):
+        self._progress_requests.append(request)
         try:
             new_requests = await self._spider.crawl(request)
             self._request_queue.put_many(new_requests)
@@ -95,24 +97,27 @@ class AsyncTask(AbstractTask):
         except Exception as e:
             console_logger.warning("失败 %s %s", request, self._error_formatter.format(e))
             file_logger.warning("失败 %s", request, exc_info=True)
+        self._progress_requests.remove(request)
 
     async def _run(self):
         while True:
             request = await self._wait_request()
             if not request:
                 break
-            self._progress_requests.append(request)
             await self._crawl_request(request)
-            self._progress_requests.remove(request)
         console_logger.info("协程已退出")
 
 
-class RecoverableTask(AsyncTask, Recoverable):
+class RecoverableTask(AsyncTask, FileBasedRecoverable):
 
     def __init__(self, spider: RecoverableSpider, request_queue=None):
         request_queue = request_queue or get_queue_for_spider(spider)
         super().__init__(spider, request_queue)
         self._recover_items = (spider, request_queue)
+        FileBasedRecoverable.__init__(self)
+
+    def stash_attr_names(self) -> List[str]:
+        return ["_progress_requests"]
 
     def can_recover(self, resource):
         if not exists(resource):
@@ -123,12 +128,29 @@ class RecoverableTask(AsyncTask, Recoverable):
         return True
 
     def stash(self, resource):
-        self._request_queue.put_many(self._progress_requests)  # 需要将所有未被处理的 request 重新放入队列
         for recover_item in self._recover_items:
             recover_item.stash(resource)
+        super().stash(resource)
 
     def recover(self, resource):
         if not self.can_recover(resource):
             raise ValueError("{} not exist".format(join(EXE_PATH, resource)))
         for recover_item in self._recover_items:
             recover_item.recover(resource)
+        try:
+            super().recover(resource)  # todo: 兼容以前的任务，待删除
+        except:
+            pass
+        self._request_queue.put_many(self._progress_requests)  # 将未处理的 request 重新放入队列
+        self._progress_requests.clear()  # 清空未处理队列
+
+
+class CountDownRecoverableTask(RecoverableTask, CountDown):
+    def __init__(self, spider: RecoverableSpider, request_queue=None):
+        request_queue = request_queue or get_queue_for_spider(spider)
+        RecoverableTask.__init__(self, spider, request_queue)
+        CountDown.__init__(self, spider.auto_save_frequency)
+
+    async def _crawl_request(self, request):
+        await super()._crawl_request(request)
+        self.count()
