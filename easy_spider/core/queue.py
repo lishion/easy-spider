@@ -115,8 +115,8 @@ class SpillRequestQueueProxy(RequestQueue):
     def __init__(self, queue: RequestQueue, num_of_spill=10000):
         self._queue = queue
         self._num_of_spill = num_of_spill
-        self._spill_dir_name = '.spill-{}-{}'.format(formatted_datetime('%Y-%m-%d-%H-%M-%S-%f'), uuid())
-        self._spill_path = join(EXE_PATH, self._spill_dir_name)
+        self._spill_dir_name = 'spill-{}-{}'.format(formatted_datetime('%Y-%m-%d-%H-%M-%S-%f'), uuid())
+        self._spill_path = work_path_join(self._spill_dir_name)
         self._wait_spill = []
         self._spilled_files = []
 
@@ -133,13 +133,14 @@ class SpillRequestQueueProxy(RequestQueue):
         if len(self._wait_spill) == self._num_of_spill:
             spill_filename = uuid()
             exists(self._spill_path) or makedirs(self._spill_path)
-            pickle_dump(self._wait_spill, self._join(spill_filename))
-            self._spilled_files.append(spill_filename)
+            pickle_dump(self._wait_spill, self._join(spill_filename))  # spill 到文件
+            self._spilled_files.append(spill_filename)  # 记录已经 spill 到磁盘的文件
             self._wait_spill.clear()
 
     def _may_load(self):
         """
-        代理队列为空，则从磁盘加载 requests
+        代理队列为空，则从磁盘加载 requests。优先从已经 spill 到磁盘的文件中加载，如果已经步不存在 spill 到磁盘的文件
+        则从 self._wait_spill 中加载
         """
         if self._queue.empty():
             if self._spilled_files:
@@ -149,7 +150,7 @@ class SpillRequestQueueProxy(RequestQueue):
                 except IOError:
                     console_logger.warning(
                         "can't load requests from file `%s`, that's mean you may lost some requests unhandled" % spill_file_uri)
-                delete_file(spill_file_uri)
+                delete_file(spill_file_uri)  # 加载完成后删除磁盘上的文件
             elif self._wait_spill:
                 self.put_many(self._wait_spill)
                 self._wait_spill.clear()
@@ -162,8 +163,8 @@ class SpillRequestQueueProxy(RequestQueue):
         return self._queue.get()
 
     def put(self, request: Request) -> None:
-        if len(self._queue) >= self._num_of_spill:
-            self._wait_spill.append(request)
+        if len(self._queue) >= self._num_of_spill:  # 当代理 queue 中 request 的数量 = self._num_of_spill 时
+            self._wait_spill.append(request)  # 新的 request 放入 self._wait_spill 中
             self._may_spill()
         else:
             self._queue.put(request)
@@ -219,5 +220,3 @@ def get_queue_for_spider(spider):
             return SpillRequestQueueProxy(queue, num_of_spill=num_of_spill)
         else:
             return queue
-
-
