@@ -1,8 +1,7 @@
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.core.recoverable import Recoverable, CountDown, FileBasedRecoverable
 from easy_spider.log import console_logger, file_logger
-from easy_spider.network.request import RequestQueue
-from easy_spider.core.queue import get_queue_for_spider
+from easy_spider.core.queue import get_queue_for_spider, RequestQueue
 from easy_spider.error.known_error import ClientError
 from easy_spider.error.error_formatter import ErrorFormatter, DefaultErrorFormatter, ClientErrorFormatter
 import asyncio
@@ -69,7 +68,7 @@ class AbstractTask(Task, ABC):
 class AsyncTask(AbstractTask):
 
     def __init__(self, spider: AsyncSpider, request_queue=None):
-        request_queue = request_queue or get_queue_for_spider(spider)
+        request_queue = get_queue_for_spider(spider) if request_queue is None else request_queue
         super().__init__(spider, request_queue)
         self._init_queue()
         self._progress_requests = []  # 正在处理中的请求
@@ -112,7 +111,8 @@ class AsyncTask(AbstractTask):
 class RecoverableTask(AsyncTask, FileBasedRecoverable):
 
     def __init__(self, spider: RecoverableSpider, request_queue=None):
-        request_queue = request_queue or get_queue_for_spider(spider)
+        # 不能改为 request_queue = request_queue or get_queue_for_spider(spider) !!!
+        request_queue = get_queue_for_spider(spider) if request_queue is None else request_queue
         super().__init__(spider, request_queue)
         self._recover_items = (spider, request_queue)
         FileBasedRecoverable.__init__(self)
