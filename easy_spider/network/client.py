@@ -41,7 +41,8 @@ class AsyncClient(Client):
             headers=request.headers,
             cookies=request.cookies,
             timeout=ClientTimeout(request.timeout),
-            params=request.params
+            params=request.params,
+            proxy=request.proxy
         )
         data_format = request.data_format.lower()
         if data_format == "form":
