@@ -2,7 +2,7 @@ from easy_spider.network.client import AsyncClient
 from easy_spider.core.task import AsyncTask, RecoverableTask, CountDownRecoverableTask
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
 from easy_spider.log import console_logger
-from easy_spider.tool import EXE_PATH, work_path_join
+from easy_spider.tool import EXE_PATH, work_path_join, confirm
 from aiohttp import ClientSession
 from asyncio import get_event_loop
 from cached_property import cached_property
@@ -26,17 +26,14 @@ class AsyncSpiderEvn:
 
     @staticmethod
     def _when_interrupt(_, __, task):
-        if input("[*] You entered Ctrl + C, would you like stop spider (y/n): ").lower() != "y":
+        if not confirm("You entered Ctrl + C, would you like stop spider"):
             return
-        if input("[*] Would you like stash your spider task (y/n): ").lower() != "y":
+        if not confirm("Would you like stash your spider task"):
             exit()
         spider_name = task.spider.name
         stash_path = work_path_join(spider_name)
         if task.can_recover(stash_path):
-            prompt_content = "[*] The stash file of spider `{}` already exist, overwrite it?(y/n): ".format(
-                spider_name)
-            override = input(prompt_content)
-            if override.lower() != "y":
+            if not confirm("The stash file of spider `{}` already exist, overwrite it".format(spider_name)):
                 exit()
         print("[*] Start stash for spider `{}`".format(task.spider.name))
         task.stash(stash_path)
@@ -55,8 +52,9 @@ class AsyncSpiderEvn:
         else:
             task = RecoverableTask(spider)
         if task.can_recover(stash_path):  # 如果能从文件中恢复则先进行恢复
-            print("[*] recover from exist stash file")
-            task.recover(stash_path)
+            if confirm("Detected stashed spider, would you like to recover it"):
+                print("[*] recover from exist stash file")
+                task.recover(stash_path)
         exists(stash_path) or makedirs(stash_path)
         return task
 

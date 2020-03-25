@@ -63,3 +63,7 @@ EXE_PATH = path.dirname(path.abspath(__name__))
 
 def work_path_join(arg, *args):
     return path.join(EXE_PATH, '.easy-spider', arg, *args)
+
+
+def confirm(info):
+    return input("[*] {}? (y/n): ".format(info)).lower() == "y"

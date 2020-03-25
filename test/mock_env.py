@@ -41,6 +41,7 @@ env.create()
 env.mocked.get("http://localhost:5000/test_extract", body=test_page, content_type="text/html", repeat=True)
 env.mocked.get("http://localhost:5000/error", status=400, body=test_page, content_type="text/html", repeat=True)
 
+
 async def _fetch(url):
     return await env.client.do_request(Request(url))
 
