@@ -86,7 +86,7 @@ class AsyncSpiderEvn:
         self.__del__()
 
     def __del__(self):
-        if not self.loop or self.loop.is_closed():
+        if not self._loop or self.loop.is_closed():
             return
         self._session and self.loop.run_until_complete(self._session.close())
 
