@@ -1,4 +1,6 @@
 # Easy Spider
+## release note 
+1.0.13: 添加自动保存功能
 ## quick start
 ``` python
 from easy_spider import async_env, AsyncSpider, Request, HTMLResponse

@@ -1,6 +1,6 @@
 import unittest
 from easy_spider.core.spider import AsyncSpider, RecoverableSpider
-from easy_spider.filters.build_in import BloomFilter, all_pass_filter, CustomFilter
+from easy_spider.filters.build_in import BloomFilter, all_pass_filter, CustomFilter, GenerationFilter
 from easy_spider.network.request import Request
 from test.mock_env import run_and_get_result, env
 from easy_spider.tool import EXE_PATH
@@ -9,8 +9,7 @@ from os.path import join
 
 class MySpider(AsyncSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.start_targets = ["http://localhost:5000/test_extract"]
         self.num_threads = 4
 
@@ -21,10 +20,10 @@ class MySpider(AsyncSpider):
 
 class RecoverMySpider(RecoverableSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.start_targets = ["http://localhost:5000/test_extract"]
         self.num_threads = 4
+        self.filter = self.filter + GenerationFilter(max_generation=1)
 
     def handle(self, response):
         print(response.bs.title)
@@ -48,20 +47,19 @@ class TestSpider(unittest.TestCase):
         spider = MySpider()
         with self.assertRaises(TypeError):
             spider.crawled_filter = spider.filter
-        spider.crawled_filter = BloomFilter(1000, 0.001)
-        spider.crawled_filter.pre_filter = all_pass_filter
         start_request = Request.of("http://localhost:5000/test_extract")
         self.assertFalse(spider.crawled_filter.accept(start_request))
 
     def test_recover(self):
         spider = RecoverMySpider()
         spider.filter = spider.filter + CustomFilter(lambda x: True)
-        spider.start_targets = ["http://www.test1.com"]
+        spider.set_session(env.session)
+        list(run_and_get_result(spider.crawl(Request.of("http://localhost:5000/test_extract"))))
         spider.stash(EXE_PATH)
         del spider
         recovered_spider = RecoverMySpider()
         recovered_spider.recover(EXE_PATH)
-        self.assertTrue(recovered_spider.crawled_filter.contains(Request.of("http://www.test1.com")))
+        self.assertTrue(recovered_spider.crawled_filter.contains(Request.of("http://localhost:5000/a.html")))
 
 
 if __name__ == '__main__':

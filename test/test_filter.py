@@ -69,14 +69,10 @@ class TestFilter(unittest.TestCase):
 
     def test_history_filter(self):
         hf = BloomFilter(1000, 0.001)
-        hf.pre_filter = html_filter
-        self.assert_false(hf, "123231")
         self.assert_true(hf, "http://123123")
         self.assert_false(hf, "http://123123")
 
         hf = HashFilter()
-        hf.pre_filter = html_filter
-        self.assert_false(hf, "123231")
         self.assert_true(hf, "http://123123")
         self.assert_false(hf, "http://123123")
 

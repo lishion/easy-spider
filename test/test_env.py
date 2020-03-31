@@ -8,8 +8,7 @@ from easy_spider.filters.build_in import GenerationFilter, URLRegFilter
 
 class MySpider(AsyncSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.num_threads = 4
         self.start_targets = ["http://localhost:5000/test_extract"]
 
@@ -19,8 +18,7 @@ class MySpider(AsyncSpider):
 
 
 class MyRecoverableSpider(RecoverableSpider):
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.num_threads = 1
         self.start_targets = ["https://github.blog/"]
         self.filter = URLRegFilter(r"^https://github\.blog/page/\d+/$")
