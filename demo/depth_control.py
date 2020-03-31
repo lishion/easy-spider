@@ -4,8 +4,7 @@ from easy_spider.filters.build_in import GenerationFilter, URLRegFilter, BloomFi
 
 class MySpider(AsyncSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.start_targets = ["https://github.blog/"]
         self.filter = URLRegFilter(r"^https://github.blog/page/\d+/$") \
                       + GenerationFilter(max_generation=3)

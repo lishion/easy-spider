@@ -3,8 +3,7 @@ from easy_spider import async_env, AsyncSpider, Request, HTMLResponse
 
 class MySpider(AsyncSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.cookies = {"key": "value"}  # 用于设置默认请求参数
         self.start_targets = ["https://github.blog/"]
 

@@ -3,8 +3,7 @@ from easy_spider import async_env, AsyncSpider, Request, HTMLResponse
 
 class MySpider(AsyncSpider):
 
-    def __init__(self):
-        super().__init__()
+    def init(self):
         self.start_targets = ["https://github.blog/"]
 
     def handle(self, response: HTMLResponse):
