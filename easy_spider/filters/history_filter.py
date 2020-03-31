@@ -6,7 +6,7 @@ from bloom_filter import BloomFilter as _BloomFilter
 from easy_spider.core.recoverable import FileBasedRecoverable
 
 
-class CrawledFilter(DependenceFilter, ABC):
+class CrawledFilter(ABC):
     """
         已爬取过滤器， 依赖于其他过滤器的结果
         pre_filter: 前置过滤器，已爬取过滤器将依赖于前置过滤器的返回结果
@@ -21,9 +21,6 @@ class CrawledFilter(DependenceFilter, ABC):
     def add(self, request: Request): pass
 
     def accept(self, request: Request) -> bool:
-        pre_filter_accept = self.pre_filter.accept(request)
-        if not pre_filter_accept:  # 如果前置过滤器返回 False 则直接返回 False
-            return False
         history_filter_accept = not self.contains(request)
         history_filter_accept and self.add(request)  # 如果不存在于布隆过滤器中，则记录
         return history_filter_accept
