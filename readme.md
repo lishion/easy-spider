@@ -2,7 +2,7 @@
 ## release note 
 1.0.13: 添加自动保存功能
 
-1.1.0: 引入中间件处理，优化 easy_spider.core.Spider 中对请求进行处理的逻辑。
+1.1.2: 引入中间件处理，优化 easy_spider.core.Spider 中对请求进行处理的逻辑。
 
 ## quick start
 ``` python
