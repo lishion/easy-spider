@@ -91,7 +91,6 @@ class AsyncSpider(Spider, AsyncClient):
 
     def __init__(self):
         super().__init__()
-        self.init()
 
     @abstractmethod
     def handle(self, response: Response):
@@ -118,9 +117,9 @@ class AsyncSpider(Spider, AsyncClient):
 class RecoverableSpider(AsyncSpider, Recoverable, ABC):
 
     def __init__(self):
-        super().__init__()
         self.name = None
         self.auto_save_frequency = 1000
+        super().__init__()
 
     def stash(self, resource):
         self._crawled_filter.stash(resource)
