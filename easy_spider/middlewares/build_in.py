@@ -61,11 +61,15 @@ class ChainMiddleware(RequestMiddleware):
     def __init__(self, *middlewares: RequestMiddleware):
         self._middlewares: List[RequestMiddleware] = list(middlewares)
 
+    @property
+    def middlewares(self): return self._middlewares
+
     def transform(self, requests: Iterable[Request], response: Optional[Response]) -> Iterable[Request]:
         r = requests
         for middleware in self._middlewares:
             r = middleware.transform(r, response)
         yield from r
 
-    def extend(self, middlewares):
-        self._middlewares.extend(middlewares)
+    def extend(self, middleware: 'ChainMiddleware'):
+        self._middlewares.extend(middleware.middlewares)
+        return self
