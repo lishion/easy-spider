@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from easy_spider.filters.filter import DependenceFilter
+from easy_spider.filters.filter import Filter
 from typing import Any, List
 from easy_spider.network.request import Request
 from bloom_filter import BloomFilter as _BloomFilter
 from easy_spider.core.recoverable import FileBasedRecoverable
 
 
-class CrawledFilter(ABC):
+class CrawledFilter(Filter, ABC):
     """
         已爬取过滤器， 依赖于其他过滤器的结果
         pre_filter: 前置过滤器，已爬取过滤器将依赖于前置过滤器的返回结果
